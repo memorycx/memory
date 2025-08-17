@@ -19,4 +19,10 @@ public class User {
     private int newLearnPlane;
     private int reviewPlane;
 
+    private int dayLearn;
+    private int dayReview;
+    private int dayRead;
+
+    private int currentBookId;
+
 }

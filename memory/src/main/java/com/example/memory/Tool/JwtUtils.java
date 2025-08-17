@@ -50,4 +50,5 @@ public class JwtUtils {
         byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
         return new SecretKeySpec(keyBytes, 0, keyBytes.length, "HmacSHA256");
     }
+
 }

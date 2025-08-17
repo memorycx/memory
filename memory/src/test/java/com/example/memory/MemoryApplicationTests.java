@@ -1,12 +1,9 @@
 package com.example.memory;
 
-import com.example.memory.Mapper.BookMapper;
-import com.example.memory.Service.UserService;
 import com.example.memory.Service.WordService;
 import com.example.memory.Tool.JwtUtils;
 import com.example.memory.pojo.Book;
 import com.example.memory.pojo.Word;
-import com.example.memory.pojo.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -9,17 +9,14 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 1. 从请求头中获取令牌（约定 Header 键为 Authorization）
         String token = request.getHeader("Authorization");
 
-        // 2. 判断令牌是否存在
         if (token == null || token.isEmpty()) {
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"code\":401,\"msg\":\"未登录，请先登录\"}");
             return false;
         }
 
-        // 3. 验证令牌有效性
         String username = JwtUtils.verifyToken(token);
         if (username == null) {
             response.setContentType("application/json;charset=UTF-8");

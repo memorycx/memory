@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 public class Book {
     private String bookName;
     private int vocabularyNum;
+    private int alreadyNum;
 }

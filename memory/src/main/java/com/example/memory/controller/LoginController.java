@@ -1,4 +1,4 @@
-package com.example.memory.Controller;
+package com.example.memory.controller;
 import com.example.memory.Service.UserService;
 import com.example.memory.Tool.JwtUtils;
 import com.example.memory.pojo.Result;

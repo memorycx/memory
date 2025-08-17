@@ -1,11 +1,13 @@
 package com.example.memory.Service;
 
-import com.example.memory.Mapper.UserMapper;
+import com.example.memory.mapper.UserMapper;
 
 import com.example.memory.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 
 @Service
 public class UserService {
@@ -13,12 +15,6 @@ public class UserService {
     @Autowired
     UserMapper userMapper;
 
-    /**
-     *
-     * @param username 用户名
-     * @param password
-     * @return
-     */
     public int login(String username,String password){
         if(userMapper.searchUserName(username) == null){
             return 0;
@@ -59,5 +55,21 @@ public class UserService {
 
     public void setTarget(User user) {
         userMapper.setTarget(user);
+    }
+
+
+    /*
+    首先查询今日有没有学习记录
+    如果有，那就更新数据库
+    如果没有，那就插入数据库
+     */
+    public void dayLearn(User user) {
+        LocalDate today = LocalDate.now();
+        User user1 = userMapper.isLearn(today,user.getUsername());
+        if(user1 == null){
+            userMapper.dayLearn(today,user);
+        }else{
+            userMapper.updateDayLearn(today,user);
+        }
     }
 }
