@@ -15,6 +15,8 @@ public class User {
     private String username;
     private String pwd;
     private String email;
+    private String address;
+    private String school;
 
     private int newLearnPlane;
     private int reviewPlane;

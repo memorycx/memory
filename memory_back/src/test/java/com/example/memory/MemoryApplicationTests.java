@@ -13,15 +13,15 @@ import java.util.List;
 @SpringBootTest
 class MemoryApplicationTests {
 
-    @Autowired
-    BookMapper bookService;
-    @Test
-    void printBooks() {
-        List<Book> books = bookService.getBooks();
-        for (Book book : books) {
-            System.out.println(book.getBookName());
-        }
-    }
+//    @Autowired
+//    BookMapper bookService;
+//    @Test
+//    void printBooks() {
+//        List<Book> books = bookService.getBooks();
+//        for (Book book : books) {
+//            System.out.println(book.getBookName());
+//        }
+//    }
 
     @Autowired
     WordService wordService;

@@ -1,192 +1,212 @@
-<script setup>
-import { ref } from 'vue';
-import WordLearning from './components/WordLearning.vue';
-import DataAnalysis from './components/DataAnalysis.vue';
-import ArticleReading from './components/ArticleReading.vue';
-import SpeakingPractice from './components/SpeakingPractice.vue';
-
-// 默认显示数据分析（个人中心）
-const activeTab = ref('data-analysis');
-
-const handleTabChange = (tab) => {
-  activeTab.value = tab;
-};
-</script>
-
 <template>
   <div class="app-container">
-    <!-- 导航栏 -->
-    <header class="nav-header">
-      <div class="nav-container">
-        <h1 class="app-title">学习助手</h1>
-        <nav class="nav-tabs">
-          <button 
-            class="nav-tab" 
-            :class="{ active: activeTab === 'data-analysis' }"
-            @click="handleTabChange('data-analysis')"
-          >
-            个人中心
-          </button>
-          <button 
-            class="nav-tab" 
-            :class="{ active: activeTab === 'word-learning' }"
-            @click="handleTabChange('word-learning')"
-          >
-            背单词
-          </button>
-          <button 
-            class="nav-tab" 
-            :class="{ active: activeTab === 'article-reading' }"
-            @click="handleTabChange('article-reading')"
-          >
-            文章阅读
-          </button>
-          <button 
-            class="nav-tab" 
-            :class="{ active: activeTab === 'speaking-practice' }"
-            @click="handleTabChange('speaking-practice')"
-          >
-            口语训练
-          </button>
+    <!-- 顶部导航栏 -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo">
+          <i class="fas fa-language"></i>
+          <span>英语学习助手</span>
+        </div>
+        <nav class="main-nav">
+          <router-link to="/" class="nav-item" :class="{ active: $route.path === '/' }">
+            <i class="fas fa-chart-line"></i>
+            <span>数据分析</span>
+          </router-link>
+          <router-link to="/vocabulary" class="nav-item" :class="{ active: $route.path === '/vocabulary' }">
+            <i class="fas fa-book"></i>
+            <span>背单词</span>
+          </router-link>
+          <router-link to="/reading" class="nav-item" :class="{ active: $route.path === '/reading' }">
+            <i class="fas fa-newspaper"></i>
+            <span>文章阅读</span>
+          </router-link>
+          <router-link to="/speaking" class="nav-item" :class="{ active: $route.path === '/speaking' }">
+            <i class="fas fa-microphone"></i>
+            <span>口语训练</span>
+          </router-link>
         </nav>
+        <div class="user-info">
+          <el-dropdown>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item>个人中心</el-dropdown-item>
+                <el-dropdown-item>设置</el-dropdown-item>
+                <el-dropdown-item divided>退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
       </div>
     </header>
-
+    
     <!-- 主内容区域 -->
-    <main class="main-content">
-      <div class="content-container">
-        <DataAnalysis v-if="activeTab === 'data-analysis'" />
-        <WordLearning v-else-if="activeTab === 'word-learning'" />
-        <ArticleReading v-else-if="activeTab === 'article-reading'" />
-        <SpeakingPractice v-else-if="activeTab === 'speaking-practice'" />
-      </div>
+    <main class="app-main">
+      <router-view />
     </main>
-
+    
     <!-- 页脚 -->
     <footer class="app-footer">
-      <p>© 2023 学习助手 - 简洁高效的学习工具</p>
+      <div class="footer-content">
+        <p>© 2024 英语学习助手 - 让学习更高效</p>
+      </div>
     </footer>
   </div>
 </template>
 
-<style scoped>
+<script>
+
+export default {
+  name: 'App'
+}
+</script>
+
+<style>
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f7fa;
+}
+
+/* 应用容器 */
 .app-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-.nav-header {
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+/* 顶部导航栏 */
+.app-header {
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.nav-container {
-  /* 导航栏最大宽度控制 - 与主内容区域保持一致 */
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+.header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.app-title {
-  font-size: 1.5em;
-  margin: 0;
-  padding: 16px 0;
-}
-
-.nav-tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.nav-tab {
-  padding: 16px 24px;
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: #666;
-  position: relative;
-  transition: all 0.2s ease;
-}
-
-.nav-tab:hover {
-  color: #4a6fa5;
-  background-color: #f8f9fa;
-}
-
-.nav-tab.active {
-  color: #4a6fa5;
-  font-weight: 600;
-}
-
-.nav-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-color: #4a6fa5;
-}
-
-.main-content {
-  flex: 1;
-  padding: 24px 0;
-}
-
-.content-container {
-  /* 主内容区域最大宽度控制 - 整个应用的主要宽度限制 */
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 0 20px;
+  height: 60px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.logo i {
+  margin-right: 10px;
+  font-size: 24px;
+}
+
+/* 主导航 */
+.main-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  color: #666;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.nav-item:hover {
+  background-color: var(--primary-bg);
+  color: var(--primary-color);
+}
+
+.nav-item.active {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.nav-item i {
+  margin-right: 8px;
+}
+
+/* 用户信息 */
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* 主内容区域 */
+.app-main {
+  flex: 1;
+  padding: 0;
+  width: 70%;
+  margin: 0 auto;
+}
+
+/* 页脚 */
 .app-footer {
-  background-color: #f8f9fa;
+  background-color: white;
   padding: 20px 0;
   text-align: center;
-  border-top: 1px solid #e9ecef;
+  color: #999;
   margin-top: auto;
 }
 
-.app-footer p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .header-content {
+    padding: 0 15px;
+  }
+}
+
 @media (max-width: 768px) {
-  .nav-container {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0 10px;
-  }
-
-  .app-title {
-    text-align: center;
-    padding: 12px 0;
-  }
-
-  .nav-tabs {
-    justify-content: center;
+  .header-content {
     flex-wrap: wrap;
+    height: auto;
+    padding: 10px;
   }
-
-  .nav-tab {
-    padding: 12px 16px;
-    font-size: 14px;
+  
+  .main-nav {
+    width: 100%;
+    justify-content: center;
+    margin: 10px 0;
   }
-
-  .content-container {
-    padding: 0 10px;
+  
+  .nav-item {
+    padding: 8px 16px;
+  }
+  .app-main{
+    width: 100%;
   }
 }
 </style>

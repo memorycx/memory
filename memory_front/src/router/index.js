@@ -1,0 +1,31 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+import VocabularyView from '../views/VocabularyView.vue'
+import ReadingView from '../views/ReadingView.vue'
+import SpeakingView from '../views/SpeakingView.vue'
+
+export default createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      component: HomeView
+    },
+    {
+      path: '/vocabulary',
+      name: 'vocabulary',
+      component: VocabularyView
+    },
+    {
+      path: '/reading',
+      name: 'reading',
+      component: ReadingView
+    },
+    {
+      path: '/speaking',
+      name: 'speaking',
+      component: SpeakingView
+    }
+  ]
+})
