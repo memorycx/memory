@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
-    <!-- 顶部导航栏 -->
-    <header class="app-header">
+    <!-- 非登录/注册页面显示导航栏 -->
+    <header class="app-header" v-if="!isAuthPage">
       <div class="header-content">
         <div class="logo">
           <i class="fas fa-language"></i>
@@ -25,8 +25,11 @@
             <span>口语训练</span>
           </router-link>
         </nav>
-        <div class="user-info">
+        <!-- <div class="user-info">
           <el-dropdown>
+            <span class="el-dropdown-link">
+              <i class="fas fa-user-circle"></i>
+            </span>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item>个人中心</el-dropdown-item>
@@ -35,17 +38,17 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-        </div>
+        </div> -->
       </div>
     </header>
     
     <!-- 主内容区域 -->
-    <main class="app-main">
+    <main class="app-main" :class="{ 'auth-page': isAuthPage }">
       <router-view />
     </main>
     
-    <!-- 页脚 -->
-    <footer class="app-footer">
+    <!-- 非登录/注册页面显示页脚 -->
+    <footer class="app-footer" v-if="!isAuthPage">
       <div class="footer-content">
         <p>© 2024 英语学习助手 - 让学习更高效</p>
       </div>
@@ -54,9 +57,13 @@
 </template>
 
 <script>
-
 export default {
-  name: 'App'
+  name: 'App',
+  computed: {
+    isAuthPage() {
+      return ['/login', '/register'].includes(this.$route.path)
+    }
+  }
 }
 </script>
 
@@ -166,6 +173,12 @@ body {
   padding: 0;
   width: 70%;
   margin: 0 auto;
+}
+
+/* 认证页面特殊样式 */
+.app-main.auth-page {
+  width: 100%;
+  margin: 0;
 }
 
 /* 页脚 */

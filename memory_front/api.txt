@@ -1,0 +1,56 @@
+文档说明:
+1. # 一级标题 开头为一个模块
+2. **粗体**这是对该模块的一些描述
+3. - 列表为接口，格式如下： 
+- 接口名称 /api/接口地址  请求方式  请求参数（可选）  返回结果（可选）
+
+
+# 登录和注册
+**这两个接口要注意resutl.error中message的信息，要用户知道哪里错了**
+**这里的token全部都是带在请求头中的**
+
+- 登录接口 /api/login  POST  {username , pwd}  {token(保存到前端的本地localStorage)}
+- 注册接口 /api/register  POST  {username , emaile, password}
+
+
+#主页的接口
+**如果没有 {token} ，后端就返回错误信息，前端展示默认信息**
+**如果没有 {token} ，result中的message携带"用户没登录"**
+
+*没做*
+`登录和注册在主页显示`
+
+- 获取绝大多少信息 api/user/info GET  {token} 
+- 获取当前书籍的单词  api/user/wordNumber GET  {token} 
+- 获取学习列表 api/user/tableData GET  {token}  (目前在维护中)
+- 获取连续学习天数 api/user/day GET  {token} 
+
+
+#背单词的接口
+**如果没有 {token} ，后端就返回错误信息，前端展示默认信息**
+**如果没有 {token} ，result中的message携带"用户没登录"**
+
+*没做*
+`单词状态在前端显示`
+
+- 获取当前背的书籍 /api/word/getCurrentBook GET  {token} 
+- 获得书籍列表 /api/word/getBookList GET  {token} 
+- 更改当前背的书籍 /api/word/changeBook POST  {token, bookId} 
+
+**重点**
+- 获得单词列表 /api/word/getWordList GET  {token, bookId} 
+1.获取当前书籍的所有单词
+2.与用户单词状态表取一个交集 ---> 再根据艾宾浩斯曲线进行过滤，筛选出需要复习的英语单词
+3.在当前书籍的所有单词去掉用户状态表中的单词 ---> 然后随机取出用户设置要背的单词数量的单词
+4.返回单词列表
+
+
+- 更改单词状态，上传学习记录 api/user/updateWordStatus  POST  {token,wordId,state}
+1.更新表中的单词状态
+2.更新学习记录
+
+
+
+
+
+

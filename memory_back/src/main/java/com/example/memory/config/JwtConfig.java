@@ -12,7 +12,7 @@ public class JwtConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         // 注册拦截器
         registry.addInterceptor(new JwtInterceptor())
-                .excludePathPatterns("/register","/login","/word") // 排除登录接口不拦截
-                .addPathPatterns("/**"); // 拦截所有/api/**路径的请求
+                .excludePathPatterns("/api/register","/api/login") // 排除登录接口不拦截
+                .addPathPatterns("/**"); // 剩余请求拦截
     }
 }

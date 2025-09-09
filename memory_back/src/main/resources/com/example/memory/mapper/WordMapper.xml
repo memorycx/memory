@@ -5,44 +5,37 @@
 
 
 <mapper namespace="com.example.memory.mapper.WordMapper">
-    <select id="getNotAlreadyWord" resultType="com.example.memory.pojo.Word">
-        SELECT all_word.word, all_word.mean ,all_word.id AS wordId FROM all_word
-        WHERE all_word.id IN
-              (SELECT a.word_id FROM
-                      (SELECT word_id FROM book_word_mappings WHERE vocabulary_book_id = #{id}) a
-                          LEFT JOIN
-                      (SELECT word_id FROM user_word_state WHERE username = #{username}) b
-                      ON a.word_id = b.word_id  -- 修正关联条件
-               WHERE b.word_id IS NULL);  -- 筛选出表B中无匹配的记录
-    </select>
+    <select id="getLearnWord" resultType="com.example.memory.pojo.Word">
+        -- 1.获取背诵书籍的所有单词
+        -- 2.获取用户已经背诵的该书单词
+        -- 3.将1中的单词去掉2中出现的单词
+        select word_id,word,meaning from all_word  where
+            word_id in (
+                select word_id
+                from book_word_mappings
+                where vocabulary_book_id = #{bookId}
+            )
+            and word_id not in (
+                select word_id
+                from user_word_state
+                where username = #{username}
+            );
 
-    <select id="getBookWord" resultType="com.example.memory.pojo.Word">
-        SELECT all_word.word,all_word.mean FROM all_word
-                               JOIN
-            (select word_id from book_word_mappings where vocabulary_book_id = #{id}) ti ON all_word.id = ti.word_id;
     </select>
 
     <select id="getReviewWord" resultType="com.example.memory.pojo.Word">
-        SELECT all_word.word, all_word.mean ,all_word.id AS wordId FROM all_word WHERE id IN
-        <foreach collection="wordsId" item="wordId" open="(" close=")" separator=",">
-            #{wordId}
-        </foreach>
+
+        select
+            aw.word_id,
+            aw.word,
+            aw.meaning,
+            uws.state,
+            uws.update_time
+        from all_word aw
+                 inner join user_word_state uws
+                            on aw.word_id = uws.word_id  -- 通过word_id关联两表
+        where uws.username = #{username}
+        order by uws.update_time;  -- 按更新时间排序
+
     </select>
-
-    <insert id="learn" parameterType="com.example.memory.pojo.Word">
-        insert into user_word_state (username, word_id, state, update_time)
-        values
-        <foreach collection="wordList" item="wordId" separator="), (" open="(" close=")">
-            #{username}, #{wordId}, #{state}, #{now}
-        </foreach>
-    </insert>
-
-    <update id="reviewed">
-        update user_word_state
-        set update_time = #{now}, state = state + 1
-        where username = #{username} and word_id in
-        <foreach collection="wordList" item="wordId" open="(" close=")" separator=",">
-            #{wordId}
-        </foreach>
-    </update>
 </mapper>

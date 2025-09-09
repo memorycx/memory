@@ -7,12 +7,10 @@
 
 
         <el-dropdown placement="bottom-end">
-          <el-button> bottomEnd </el-button>
+          <el-button> {{ selectedBook }} </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>The Action 1st</el-dropdown-item>
-              <el-dropdown-item>The Action 2nd</el-dropdown-item>
-              <el-dropdown-item>The Action 3rd</el-dropdown-item>
+              <el-dropdown-item v-for="item in bookList" :key="item.id" :label="item.bookName" :value="item.bookName" @click="changeBookID(item.id)">{{ item.bookName }}</el-dropdown-item>      
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -39,7 +37,7 @@
               v-model="userInput"
               placeholder="请输入英文单词"
               class="word-input"
-              @keyup.enter="checkAnswer"
+              @keyup.enter="checkAnswer(currentWord.state || 0,currentWord.wordId)"
             ></el-input>
             <div v-if="showResult" class="result-feedback">
               <div v-if="isCorrect" class="correct-answer">
@@ -64,7 +62,7 @@
       <div class="action-buttons">
         <el-button class="btn" @click="previousWord" :disabled="currentIndex === 0">上一个</el-button>
         <el-button class="btn" type="primary" @click="nextStep" v-if="!userInputMode">默写</el-button>
-        <el-button class="btn" type="primary" @click="checkAnswer" v-else>提交答案</el-button>
+        <el-button class="btn" type="primary" @click="checkAnswer(currentWord.state || 0,currentWord.wordId)" v-else>提交答案</el-button>
       </div>
     </el-card>
     
@@ -108,32 +106,38 @@
 </template>
 
 <script>
+import {changeBook , getWordList ,getBookList ,getCurrentBook ,updateWordStatus} from '../api/word'
 export default {
   name: 'VocabularyView',
   data() {
     return {
-      selectedBook: 'cet4',
+      selectedBook: 'CET4',
+      bookList: [
+        { id : 1, bookName: 'CET4', vocabularyNum : 4000 },
+        { id : 2, bookName: 'CET6', vocabularyNum : 6000 },
+        { id : 3, bookName: 'GRE', vocabularyNum : 4400 },
+        { id : 4, bookName: 'TOEFL', vocabularyNum : 5600 }],
       vocabularyList: [
-        { word: 'abandon', meaning: 'v. 放弃；抛弃，遗弃' },
-        { word: 'ability', meaning: 'n. 能力，才能' },
-        { word: 'abroad', meaning: 'adv. 在国外，到国外' },
-        { word: 'absolute', meaning: 'adj. 绝对的，完全的' },
-        { word: 'absorb', meaning: 'v. 吸收；吸引…的注意' },
-        { word: 'abstract', meaning: 'adj. 抽象的 n. 摘要' },
-        { word: 'abundant', meaning: 'adj. 丰富的，充裕的' },
-        { word: 'abuse', meaning: 'v. 滥用；虐待 n. 滥用' },
-        { word: 'academic', meaning: 'adj. 学术的；教学的' },
-        { word: 'academy', meaning: 'n. 学院，研究院' },
-        { word: 'accelerate', meaning: 'v. 加速，促进' },
-        { word: 'accent', meaning: 'n. 口音，腔调；重音' },
-        { word: 'accept', meaning: 'v. 接受；同意' },
-        { word: 'access', meaning: 'n. 通道，入口；接近' },
-        { word: 'accident', meaning: 'n. 事故，意外事件' },
-        { word: 'accompany', meaning: 'v. 陪伴，陪同；伴随' },
-        { word: 'accomplish', meaning: 'v. 完成，实现' },
-        { word: 'according', meaning: 'prep. 根据，按照' },
-        { word: 'account', meaning: 'n. 账户；描述；解释' },
-        { word: 'accurate', meaning: 'adj. 准确的，精确的' }
+        { wordId : 0,state: 1, word: 'abandon', meaning: 'v. 放弃；抛弃，遗弃' },
+        { wordId : 1,state: 1, word: 'ability', meaning: 'n. 能力，才能' },
+        { wordId : 2,state: 1, word: 'abroad', meaning: 'adv. 在国外，到国外' },
+        { wordId : 3,state: 1, word: 'absolute', meaning: 'adj. 绝对的，完全的' },
+        { wordId : 4,state: 1, word: 'absorb', meaning: 'v. 吸收；吸引…的注意' },
+        { wordId : 5,state: 1, word: 'abstract', meaning: 'adj. 抽象的 n. 摘要' },
+        { wordId : 6,state: 1, word: 'abundant', meaning: 'adj. 丰富的，充裕的' },
+        { wordId : 7,state: 1, word: 'abuse', meaning: 'v. 滥用；虐待 n. 滥用' },
+        { wordId : 8,state: 1, word: 'academic', meaning: 'adj. 学术的；教学的' },
+        { wordId : 9,state: 1, word: 'academy', meaning: 'n. 学院，研究院' },
+        { wordId : 10,state: 1, word: 'accelerate', meaning: 'v. 加速，促进' },
+        { wordId : 11,state: 1, word: 'accent', meaning: 'n. 口音，腔调；重音' },
+        { wordId : 12,state: 1, word: 'accept', meaning: 'v. 接受；同意' },
+        { wordId : 13,state: 1, word: 'access', meaning: 'n. 通道，入口；接近' },
+        { wordId : 14,state: 1, word: 'accident', meaning: 'n. 事故，意外事件' },
+        { wordId : 15,state: 1, word: 'accompany', meaning: 'v. 陪伴，陪同；伴随' },
+        { wordId : 16,state: 1, word: 'accomplish', meaning: 'v. 完成，实现' },
+        { wordId : 17,state: 1, word: 'according', meaning: 'prep. 根据，按照' },
+        { wordId : 18,state: 1, word: 'account', meaning: 'n. 账户；描述；解释' },
+        { wordId : 19,state: 1, word: 'accurate', meaning: 'adj. 准确的，精确的' }
       ],
       currentIndex: 0,
       userInputMode: false,
@@ -141,8 +145,8 @@ export default {
       showResult: false,
       isCorrect: false,
       correctCount: 0,
-      totalAttempts: 0,
-      learnedToday: 0,
+      totalAttempts: 0, //今日总学习单词数
+      learnedToday: 0, //今日已学习单词数
       startTime: new Date()
     }
   },
@@ -164,13 +168,36 @@ export default {
     }
   },
   methods: {
+    async init(){
+      try{
+        const bookName = await getCurrentBook();
+        if(bookName != null) this.selectedBook = bookName;
+        const book = await getBookList();
+        if(book != null) this.bookList = book;
+        const word = await getWordList();
+        if(word != null) this.vocabularyList = word;
+        
+        
+      }catch(error){
+        console.log(error)
+      }
+    },
+    async changeBookID(value) {
+      try{
+        this.selectedBook = value;
+        await changeBook(value);
+        const word = await getWordList();
+        if(word != null) this.vocabularyList = word;
+      }catch(error){
+        console.log(error)
+      }
+
+    },
+
     progressFormat(percentage) {
       return `${percentage.toFixed(0)}%`
     },
     playPronunciation() {
-      // 播放单词发音
-      console.log('播放单词发音:', this.currentWord.word)
-      // 模拟语音播放效果
       const audio = new Audio()
       audio.src = `https://api.dictionaryapi.dev/media/pronunciations/en/${this.currentWord.word}-us.mp3`
       audio.play().catch(error => {
@@ -182,7 +209,7 @@ export default {
       this.userInput = ''
       this.showResult = false
     },
-    checkAnswer() {
+    async checkAnswer(state,id) {
       this.totalAttempts++
       this.showResult = true
       
@@ -190,18 +217,17 @@ export default {
         this.isCorrect = true
         this.correctCount++
         this.learnedToday++
-        
-        // 延迟进入下一个单词
+        await updateWordStatus(state,id);
         setTimeout(() => {
           this.nextWord()
-        }, 1500)
+        }, 800)
       } else {
         this.isCorrect = false
         // 延迟重置输入模式
         setTimeout(() => {
           this.userInputMode = false
           this.showResult = false
-        }, 2000)
+        }, 800)
       }
     },
     nextWord() {
@@ -221,6 +247,9 @@ export default {
         this.showResult = false
       }
     }
+  },
+  created(){
+    this.init()
   },
   mounted() {
     // 初始化学习数据

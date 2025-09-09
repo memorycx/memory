@@ -12,8 +12,13 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class Word {
     private String word;
-    private String mean;
+    private String meaning;
     private Integer state;
     private LocalDate updateTime;
     private Integer wordId;
+
+    public String toString()
+    {
+        return "wordId:" + wordId;
+    }
 }

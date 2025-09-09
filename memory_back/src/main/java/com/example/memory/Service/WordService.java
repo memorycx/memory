@@ -2,13 +2,16 @@ package com.example.memory.Service;
 
 
 import com.example.memory.mapper.WordMapper;
+import com.example.memory.pojo.Book;
 import com.example.memory.pojo.User;
 import com.example.memory.pojo.Word;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -19,78 +22,59 @@ public class WordService {
     WordMapper wordMapper;
 
     /**
-     * 获得一本书的所有词汇
+     * 获取书籍的单词数量
      */
-    public List<Word> getWord(Integer id) {
-        return wordMapper.getBookWord(id);
+    public int searchBookInfo(String username){
+        int id = wordMapper.getCurrentBookId(username);
+        return wordMapper.searchBookInfo(id);
     }
 
 
-    /**
-     * 2.用户当前学习书籍
-     *   2.1 得到该书籍的所有单词
-     *   2.2 获得本书背过的单词
-     *   2.3 筛选出没有背诵的单词
-     */
-    public List<Word> getTodayWord(String username) {
-
-        List<Word> words = new ArrayList<>();
-        User user  = wordMapper.getCurrentBookId(username);
-        int bookId = user.getCurrentBookId();
-        int newLearnPlane = user.getNewLearnPlane();
-        List<Word> wordsAll = wordMapper.getNotAlreadyWord(username,bookId);
-
-        if(wordsAll.size()  <= newLearnPlane){
-            return wordsAll;
-        }
-        int min = 0;
-        int max = wordsAll.size() - 1;
-
-        for(int i = 0;i < newLearnPlane;i++){
-            Random random = new Random();
-            int rangeInt = min + random.nextInt(max - min + 1); // min ~ max之间的整数
-            Word word = wordsAll.get(rangeInt);
-            words.add(word);
-        }
-        return words;
+    public int getCurrentBookId(String username) {
+        return wordMapper.getCurrentBookId(username);
     }
 
-    /**
-     * 1. 先获得所有该用户所有待复习的单词
-     * 2. 优先复习state等级高的词汇
-     * 3. 是否复习校验
-     *     -->  当下时间 - 上次更新时间  = 差距天数
-     *     -->  差距天数 && state 判断当前是否需要复习
-     */
-    public List<Word> getReviewWord(String username) {
-        List<Word> wordsAll = wordMapper.getAllReviewWord(username);
-        List<Integer> wordsId = new ArrayList<>();
-        for(Word word : wordsAll){
-            // 得到间隔的天数
-            int day = word.getUpdateTime().until(LocalDate.now()).getDays();
-            if(word.getState() == 4 && day >= 27){
-                wordsId.add(word.getWordId());
-            }
-            else if(word.getState() == 3 && day >= 4){
-                wordsId.add(word.getWordId());
-            }
-            else if(word.getState() == 2 && day >= 2){
-                wordsId.add(word.getWordId());
-            }
-            else if(word.getState() == 1 && day >= 1){
-                wordsId.add(word.getWordId());
+    public List<Book> getBookList() {
+        return wordMapper.getBookList();
+    }
+
+    public List<Word> getWordList(String username) {
+        LocalDate date = LocalDate.now();
+        int bookId = wordMapper.getCurrentBookId(username);
+        // 这里需要走两步逻辑 1.拿到复习单词 2.拿到复习单词
+        List<Word> wordList = new ArrayList<>();
+
+        // 1. 拿到复习单词
+        List<Word> reviewWordList = wordMapper.getReviewWord(username);
+        for(Word word : reviewWordList){
+            if(word.getState() == 0 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 1){
+                wordList.add(word);
+            }else if(word.getState() == 1 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 2){
+                wordList.add(word);
+            }else if(word.getState() == 2 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 3){
+                wordList.add(word);
+            }else if(word.getState() == 3 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 4){
+                wordList.add(word);
+            }else if(word.getState() == 4 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 27){
+                wordList.add(word);
             }
         }
-        return wordMapper.getReviewWord(wordsId);
-    }
-
-    public void learn(List<Integer> wordList, String username) {
-        LocalDate now = LocalDate.now();
-        wordMapper.learn(wordList,username,now,1);
-    }
-
-    public void reviewed(List<Integer> wordList, String username) {
-        LocalDate now = LocalDate.now();
-        wordMapper.reviewed(wordList,username,now);
+        // 2. 拿到背诵单词
+        List<Word> learnWordList = wordMapper.getLearnWord(username,bookId);
+        if (learnWordList != null && !learnWordList.isEmpty()) {
+            if (learnWordList.size() <= 20) {
+                wordList.addAll(learnWordList);
+            } else {
+                Random random = new Random();
+                for (int i = 0; i < 20; i++) {
+                    // 生成不重复的随机索引
+                    int randomIndex = random.nextInt(learnWordList.size() - i);
+                    wordList.add(learnWordList.get(randomIndex));
+                    // 交换已选中元素到尾部，避免重复选取
+                    Collections.swap(learnWordList, randomIndex, learnWordList.size() - 1 - i);
+                }
+            }
+        }
+        return wordList;
     }
 }

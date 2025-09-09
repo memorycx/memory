@@ -1,8 +1,57 @@
-import axios from 'axios';
+import request from '../utils/request'
 
-// 假设你的后端API地址是 http://localhost:3000
-const API_URL = 'http://localhost:3000';
+export function login(data) {
+  return request({
+    url: '/api/login',
+    method: 'POST',
+    data
+  }).catch(error => {
+    throw error;
+  })
+}
 
-export const registerUser = (userData) => {
-    return axios.post(`${API_URL}/register`, userData);
-};
+export function register(data) {
+  return request({
+    url: '/api/register',
+    method: 'POST',
+    data
+  }).catch(error => {
+    throw error;
+  })
+}
+
+export function info() {
+  return request({
+    url: 'api/user/info',
+    method: 'GET',
+  }).catch(error => {
+    console.log(error)
+  })
+}
+
+export function wordNumber() {
+  return request({
+    url: 'api/user/wordNumber',
+    method: 'GET',
+  }).catch(error => {
+    console.log(error)
+  })
+}
+
+export function tableData() {
+  return request({
+    url: 'api/user/tableData',
+    method: 'GET',
+  }).catch(error => {
+    console.log(error)
+  })
+}
+
+export function day() {
+  return request({
+    url: 'api/user/day',
+    method: 'GET',
+  }).catch(error => {
+    console.log(error)
+  })
+}

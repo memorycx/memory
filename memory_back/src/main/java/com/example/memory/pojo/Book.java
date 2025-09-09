@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Book {
     private String bookName;
+    private int id;
     private int vocabularyNum;
-    private int alreadyNum;
 }

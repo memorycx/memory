@@ -1,6 +1,7 @@
 package com.example.memory.mapper;
 
 
+import com.example.memory.pojo.Book;
 import com.example.memory.pojo.User;
 import com.example.memory.pojo.Word;
 import org.apache.ibatis.annotations.*;
@@ -11,25 +12,23 @@ import java.util.List;
 @Mapper
 public interface WordMapper {
 
-
+    // 获得一本书的单词数量
+    @Select("SELECT vocabulary_num FROM vocabulary_books WHERE id = #{bookId};")
+    int searchBookInfo(int bookId);
 
     // 得到用户目前在背的词汇书
-    @Select("SELECT current_book_id, new_learn_plane FROM users WHERE username = #{username};")
-    User getCurrentBookId(String username);
+    @Select("SELECT current_book_id  FROM users WHERE username = #{username};")
+    int getCurrentBookId(String username);
 
+    // 得到用户所有的词汇书
+    @Select("SELECT * FROM vocabulary_books;")
+    List<Book> getBookList();
 
-    List<Word> getBookWord(Integer id);
+    //获取所有需要复习的单词
+    List<Word> getReviewWord(String username);
 
-
-
-    List<Word> getNotAlreadyWord(String username,Integer id);
-
-    @Select("SELECT word_id, state, update_time FROM user_word_state WHERE username = #{username} ORDER BY state;")
-    List<Word> getAllReviewWord(String username);
-
-    List<Word> getReviewWord(List<Integer> wordsId);
-
-    void learn(List<Integer> wordList, String username, LocalDate now,Integer state);
-
-    void reviewed(List<Integer> wordList, String username, LocalDate now);
+    // 1.获取背诵书籍的所有单词
+    // 2.获取用户已经背诵的该书单词
+    // 3.将1中的单词去掉2中出现的单词
+    List<Word> getLearnWord(String username,int bookId);
 }

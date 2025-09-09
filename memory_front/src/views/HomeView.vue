@@ -4,30 +4,30 @@
       <el-card class="personal-card">
         <div class="personal-info">
           <div class="avatar-section">
-            <h2>Qiushui</h2>
-            <span>example@example.com</span>
+            <h2>{{ userData.username }}</h2>
+            <span>{{ userData.email }}</span>
           </div>
           <hr>
           <br>
           <div class="info-section">
             <div class="info-item">
-              <span>性别: 男</span>
+              <span>性别: {{ userData.gender === 1? '男' : '女' }}</span>
             </div>
             <div class="info-item">
-              <span>地址: 嘉兴</span>
+              <span>地址: {{ userData.address }}</span>
             </div>
             <div class="info-item">
-              <span>学校: 嘉兴南湖学院</span>
+              <span>学校: {{ userData.school }}</span>
             </div>
             <div class="info-item">
 
-              <span>每日新学: 20</span>
+              <span>每日新学: {{ userData.newLearnPlane }}</span>
             </div>
             <div class="info-item">
-              <span>每日复习: 30</span>
+              <span>每日复习: {{ userData.reviewPlane }}</span>
             </div>
             <div class="info-item">
-              <span>背诵书籍: 大学英语四级词汇</span>
+              <span>背诵书籍: {{ userData.currentBookId }}</span>
               <el-button type="primary" class="edit-button">编辑个人资料</el-button>
             </div>
           </div>
@@ -40,15 +40,15 @@
           <img src="../assets/sigma.png" alt="" class="ico">
           <div class="card-content">
             <div class="stat-label">已掌握单词</div>
-            <div class="stat-number">2500</div>
-            <div class="stat-label">总单词数4500</div>
+            <div class="stat-number">{{ userData.wordNums }}</div>
+            <div class="stat-label">总单词数 {{ allWordNums }}</div>
           </div>
         </div>
         <div class="stat-item card">
           <img src="../assets/books-stack-of-three.png" alt="" class="ico">
           <div class="card-content">
             <div class="stat-label">阅读文章</div>
-            <div class="stat-number">120</div>
+            <div class="stat-number">{{  userData.textNums }}</div>
             <div class="stat-label">累计阅读量</div>
           </div>
         </div>
@@ -60,7 +60,7 @@
           <img src="../assets/voice-search.png" alt="" class="ico">
           <div class="card-content">
             <div class="stat-label">口语练习</div>
-            <div class="stat-number">45</div>
+            <div class="stat-number">{{ userData.speekNums }}</div>
             <div class="stat-label">练习次数</div>
           </div>
 
@@ -69,7 +69,7 @@
           <img src="../assets/analytics.png" alt="" class="ico">
           <div class="card-content">
             <div class="stat-label">学习天数</div>
-            <div class="stat-number">30</div>
+            <div class="stat-number">{{ day }}</div>
             <div class="stat-label">连续学习天数</div>
           </div>
         </div>
@@ -83,7 +83,7 @@
     <el-table :data="tableData" style="width: 100%">
       <el-table-column prop="date" label="Date" width="180" />
       <el-table-column prop="name" label="Name" width="180" />
-      <el-table-column prop="address" label="Address" />
+      <el-table-column prop="content" label="Content" />
     </el-table>
 
   </div>  
@@ -92,9 +92,93 @@
 
 <script>
 import 'cal-heatmap/cal-heatmap.css'
-
+import { info , wordNumber ,tableData ,day} from '../api/user'
 export default {
-
+  name: 'HomeView',
+  data() {
+    return {
+      userData:{
+        username: 'Qiushui',
+        email: 'example@example.com',
+        gender: 1,
+        address: '嘉兴',
+        school: '嘉兴南湖学院',
+        newLearnPlane: 25,
+        reviewPlane: 30,
+        currentBookId: 1,
+        textNums: 20,
+        wordNums: 1500,
+        speekNums: 21,
+      },
+      day : 20,
+      allWordNums : 0,
+      tableData: [
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },]
+    }
+  },
+  methods: {
+    async fetchData() {
+      try{
+         const data = await info()
+         if(data != null) this.userData = data
+      }
+      catch(error){
+        console.log(error)
+      }
+    },
+    async fetchWordNumber(){
+      try{
+        const data = await wordNumber()
+        if(data != null) this.allWordNums = data
+      }
+      catch(error){
+        console.log(error)
+      }
+    },
+    async fetchTableData(){
+      try{
+        const data = await tableData()
+        if(data != null) this.tableData = data
+      }
+      catch(error){
+        console.log(error)
+      }
+    },
+    async fetchDay(){
+      try{
+        const data = await day()
+        if(data != null) this.day = data
+      }
+      catch(error){
+        console.log(error)
+      }
+    }
+  },
+  mounted() {
+    this.fetchWordNumber()
+    this.fetchData()
+    this.fetchTableData()
+    this.fetchDay()
+  }
 }
 </script>
 
@@ -190,7 +274,7 @@ export default {
 }
 
 /* 响应式调整 */
-@media (max-width: 768px) {
+@media (max-width: 1250px) {
   .edit-button{
       width: 30%;
       min-width: 140px;

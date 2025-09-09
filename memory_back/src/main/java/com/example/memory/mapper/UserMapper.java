@@ -2,9 +2,10 @@ package com.example.memory.mapper;
 
 
 import com.example.memory.pojo.User;
+import com.example.memory.pojo.Word;
 import org.apache.ibatis.annotations.*;
 
-import java.time.LocalDate;
+
 
 @Mapper
 public interface UserMapper {
@@ -13,14 +14,8 @@ public interface UserMapper {
     /**
      * 用户登录核验
      */
-    @Select("SELECT username FROM users WHERE username = #{username}")
-    String searchUserName(String username);
-
-    @Select("SELECT pwd FROM users WHERE username = #{username}")
-    String searchUserPwd(String username);
-
-    @Select("SELECT username FROM users WHERE email = #{email}")
-    User searchEmail(String email);
+    @Select("SELECT username,pwd,email,continue_day FROM users WHERE username = #{username}")
+    User searchUser(String username);
 
 
     /**
@@ -29,26 +24,46 @@ public interface UserMapper {
     @Insert("INSERT INTO users (username, email, pwd) VALUES (#{username}, #{email}, #{pwd})")
     int addUser(String username, String email, String pwd);
 
-    /**
-     * 设置用户学习目标
-     */
-    @Update("UPDATE users SET new_learn_plane = #{newLearnPlane}, review_plane = #{reviewPlane} WHERE username = #{username}")
-    void setTarget(User user);
+    @Select("SELECT * FROM users WHERE email = #{email}")
+    Integer searchEmail(String email);
 
 
     /**
-     * 维护用户每日学习数据
+     * 获取用户信息
      */
-
-    @Select("SELECT * FROM user_day_num WHERE username = #{username} AND day = #{day}")
-    User isLearn(LocalDate day, String username);
-
-
-    @Insert("INSERT INTO user_day_num (username, day, day_learn, day_review, day_read) \n" +
-            "VALUES (#{user.username}, #{day}, #{user.dayLearn}, #{user.dayReview}, #{user.dayRead})")
-    void dayLearn(LocalDate day, User user);
+    @Select("SELECT username,email,gender,address,school,new_learn_plane,review_plane,current_book_id,text_nums,word_nums,speek_nums FROM users WHERE username = #{username}")
+    User searchUserInfo(String username);
 
 
-    @Update("UPDATE user_day_num SET day_learn = #{user.dayLearn}, day_review = #{user.dayReview}, day_read = #{user.dayRead} WHERE username = #{user.username} AND day = #{day}")
-    void updateDayLearn(LocalDate day, User user);
+    /**
+     * 获取用户最近学习记录
+     */
+//    @Select("SELECT date,username,content FROM user_day_num WHERE username = #{username} ORDER BY date DESC LIMIT 7")
+//    List<UserLearn> learn(String username);
+
+    /**
+     * 更改用户目前在背的词汇书
+     */
+    @Update("UPDATE users SET current_book_id = #{bookId} WHERE username = #{username}")
+    void changeCurrentBook(String username,Integer bookId);
+
+
+
+    /**
+     * 添加单词状态
+     */
+    @Insert("INSERT into user_word_state(username,word_id,update_time,state)" +
+            "VALUES (#{username},#{word.wordId},now(),#{word.state} + 1)")
+    void addWordStatus(Word word, String username);
+
+    /**
+     * 更新单词状态
+     */
+    @Update("UPDATE user_word_state SET state = #{word.state} + 1,update_time = now() WHERE username = #{username} AND word_id = #{word.wordId}")
+    void updateWordStatus(Word word,String username);
+
+
+    void updateNewLearnToday(String username);
+
+    void updateReviewToday(String username);
 }
