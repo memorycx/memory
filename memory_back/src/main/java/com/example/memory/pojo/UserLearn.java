@@ -11,8 +11,10 @@ import java.time.LocalDate;
 public class UserLearn {
     private String username;
     private LocalDate date;
+    private String content;
     private int newLearn;
     private int review;
     private int read;
     private int speek;
+
 }

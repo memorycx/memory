@@ -41,7 +41,6 @@ export function getWordList() {
 }
 
 export function updateWordStatus(state,wordId) {
-  console.log(state,wordId)
   return request({
     url: '/api/user/updateWordStatus',
     method: 'POST',
@@ -49,10 +48,41 @@ export function updateWordStatus(state,wordId) {
       state,
       wordId
     }
-
   }).catch(error => {
     throw error;
   })
 }
+
+
+export function getNumTodayAlready() {
+  return request({
+    url: 'api/user/getToday',
+    method: 'GET',
+  }).catch(error => {
+    throw error;
+  })
+}
+
+
+export function getContinueLearn() {
+  return request({
+    url: '/api/word/continueLearn',
+    method: 'GET',
+  }).catch(error => {
+    throw error;
+  })
+}
+
+export function setKnow(params) {
+  return request({
+    url: '/api/word/setKnow',
+    method: 'GET',
+    params: params 
+  }).catch(error => {
+    throw error;
+  })
+}
+
+
 
 

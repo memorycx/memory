@@ -3,13 +3,13 @@
 2. **粗体**这是对该模块的一些描述
 3. - 列表为接口，格式如下： 
 - 接口名称 /api/接口地址  请求方式  请求参数（可选）  返回结果（可选）
-
+4. 请求中的token全部是写在请求头中的，参数中写着，只是起强调作用
 
 # 登录和注册
 **这两个接口要注意resutl.error中message的信息，要用户知道哪里错了**
-**这里的token全部都是带在请求头中的**
 
-- 登录接口 /api/login  POST  {username , pwd}  {token(保存到前端的本地localStorage)}
+
+- 登录接口 /api/login  POST  {username , pwd}  返回示例：token(保存到前端的本地localStorage)
 - 注册接口 /api/register  POST  {username , emaile, password}
 
 
@@ -20,10 +20,44 @@
 *没做*
 `登录和注册在主页显示`
 
-- 获取绝大多少信息 api/user/info GET  {token} 
-- 获取当前书籍的单词  api/user/wordNumber GET  {token} 
-- 获取学习列表 api/user/tableData GET  {token}  (目前在维护中)
-- 获取连续学习天数 api/user/day GET  {token} 
+- 获取绝大多少信息 api/user/info GET  {token}       
+    返回示例：{
+        username: 'Qiushui',
+        email: 'example@example.com',
+        gender: 1,
+        address: '嘉兴',
+        school: '嘉兴南湖学院',
+        newLearnPlane: 25,
+        reviewPlane: 30,
+        currentBookId: 1,
+        textNums: 20,
+        wordNums: 1500,
+        speekNums: 21,
+      },
+- 获取当前书籍的单词  api/user/wordNumber GET  {token}  返回示例：(int)10 
+- 获取学习列表 api/user/tableData GET  {token}  
+    返回示例：[
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
+        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
+        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },]
+- 获取连续学习天数 api/user/day GET  {token} 返回示例：(int)1 
 
 
 #背单词的接口
@@ -33,24 +67,80 @@
 *没做*
 `单词状态在前端显示`
 
-- 获取当前背的书籍 /api/word/getCurrentBook GET  {token} 
+- 获取当前背的书籍 /api/word/getCurrentBook GET  {token}  返回示例：String CET4
 - 获得书籍列表 /api/word/getBookList GET  {token} 
-- 更改当前背的书籍 /api/word/changeBook POST  {token, bookId} 
+    返回示例：[
+        { id : 1, bookName: 'CET4', vocabularyNum : 4000 },
+        { id : 2, bookName: 'CET6', vocabularyNum : 6000 },
+        { id : 3, bookName: 'GRE', vocabularyNum : 4400 },
+        { id : 4, bookName: 'TOEFL', vocabularyNum : 5600 }]
+- 更改当前背的书籍 /api/word/changeBook POST  {token, bookId}   返回示例：(int) 1 注：这是bookID
 
 **重点**
-- 获得单词列表 /api/word/getWordList GET  {token, bookId} 
 1.获取当前书籍的所有单词
 2.与用户单词状态表取一个交集 ---> 再根据艾宾浩斯曲线进行过滤，筛选出需要复习的英语单词
 3.在当前书籍的所有单词去掉用户状态表中的单词 ---> 然后随机取出用户设置要背的单词数量的单词
 4.返回单词列表
 
+- 获得单词列表 /api/word/getWordList GET  {token} 
+    返回示例：[
+        { id : 0,state: 1, word: 'abandon', meaning: 'v. 放弃；抛弃，遗弃' },
+        { id : 1,state: 1, word: 'ability', meaning: 'n. 能力，才能' },
+        { id : 2,state: 1, word: 'abroad', meaning: 'adv. 在国外，到国外' },
+        { id : 3,state: 1, word: 'absolute', meaning: 'adj. 绝对的，完全的' },
+        { id : 4,state: 1, word: 'absorb', meaning: 'v. 吸收；吸引…的注意' },
+        { id : 5,state: 1, word: 'abstract', meaning: 'adj. 抽象的 n. 摘要' },
+        { id : 6,state: 1, word: 'abundant', meaning: 'adj. 丰富的，充裕的' },
+        { id : 7,state: 1, word: 'abuse', meaning: 'v. 滥用；虐待 n. 滥用' },
+        { id : 8,state: 1, word: 'academic', meaning: 'adj. 学术的；教学的' },
+        { id : 9,state: 1, word: 'academy', meaning: 'n. 学院，研究院' },
+        { id : 10,state: 1, word: 'accelerate', meaning: 'v. 加速，促进' },
+        { id : 11,state: 1, word: 'accent', meaning: 'n. 口音，腔调；重音' },
+        { id : 12,state: 1, word: 'accept', meaning: 'v. 接受；同意' },
+        { id : 13,state: 1, word: 'access', meaning: 'n. 通道，入口；接近' },
+        { id : 14,state: 1, word: 'accident', meaning: 'n. 事故，意外事件' },
+        { id : 15,state: 1, word: 'accompany', meaning: 'v. 陪伴，陪同；伴随' },
+        { id : 16,state: 1, word: 'accomplish', meaning: 'v. 完成，实现' },
+        { id : 17,state: 1, word: 'according', meaning: 'prep. 根据，按照' },
+        { id : 18,state: 1, word: 'account', meaning: 'n. 账户；描述；解释' },
+        { id : 19,state: 1, word: 'accurate', meaning: 'adj. 准确的，精确的' }
+      ]
 
-- 更改单词状态，上传学习记录 api/user/updateWordStatus  POST  {token,wordId,state}
+
 1.更新表中的单词状态
 2.更新学习记录
+3.判断改单词是否掌握（还没测试）
+- 更改单词状态，上传学习记录 api/user/updateWordStatus  POST  {token,state,wordId}
 
 
+- 获得今日学习的单词数量 /api/word/getToday GET  {token}  返回示例：{learnNum:10 , reviewNum:10}
+
+1.再返回用户设置的目标值数量的单词
+- 完成学习后，继续学习 /api/word/continueLearn GET  {token}  返回示例：[
+        { id : 0,state: 1, word: 'abandon', meaning: 'v. 放弃；抛弃，遗弃' },
+        { id : 1,state: 1, word: 'ability', meaning: 'n. 能力，才能' },
+        { id : 2,state: 1, word: 'abroad', meaning: 'adv. 在国外，到国外' },
+        { id : 3,state: 1, word: 'absolute', meaning: 'adj. 绝对的，完全的' },
+        { id : 4,state: 1, word: 'absorb', meaning: 'v. 吸收；吸引…的注意' },
+        { id : 5,state: 1, word: 'abstract', meaning: 'adj. 抽象的 n. 摘要' },
+        { id : 6,state: 1, word: 'abundant', meaning: 'adj. 丰富的，充裕的' },
+        { id : 7,state: 1, word: 'abuse', meaning: 'v. 滥用；虐待 n. 滥用' },
+        { id : 8,state: 1, word: 'academic', meaning: 'adj. 学术的；教学的' },
+        { id : 9,state: 1, word: 'academy', meaning: 'n. 学院，研究院' },
+        { id : 10,state: 1, word: 'accelerate', meaning: 'v. 加速，促进' },
+        { id : 11,state: 1, word: 'accent', meaning: 'n. 口音，腔调；重音' },
+        { id : 12,state: 1, word: 'accept', meaning: 'v. 接受；同意' },
+        { id : 13,state: 1, word: 'access', meaning: 'n. 通道，入口；接近' },
+        { id : 14,state: 1, word: 'accident', meaning: 'n. 事故，意外事件' },
+        { id : 15,state: 1, word: 'accompany', meaning: 'v. 陪伴，陪同；伴随' },
+        { id : 16,state: 1, word: 'accomplish', meaning: 'v. 完成，实现' },
+        { id : 17,state: 1, word: 'according', meaning: 'prep. 根据，按照' },
+        { id : 18,state: 1, word: 'account', meaning: 'n. 账户；描述；解释' },
+        { id : 19,state: 1, word: 'accurate', meaning: 'adj. 准确的，精确的' }
+      ]
 
 
+- 用户将单词设置为已掌握 /api/word/setKnow GET  {token,wordId}  
+  
 
 

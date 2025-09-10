@@ -7,10 +7,10 @@
 
 
         <el-dropdown placement="bottom-end">
-          <el-button> {{ selectedBook }} </el-button>
+          <el-button> {{ selectedBook }} <i class="el-icon-arrow-down"></i></el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item v-for="item in bookList" :key="item.id" :label="item.bookName" :value="item.bookName" @click="changeBookID(item.id)">{{ item.bookName }}</el-dropdown-item>      
+              <el-dropdown-item v-for="item in bookList" :key="item.id" :label="item.bookName" :value="item.bookName" @click="changeBookID(item.id,item.bookName)">{{ item.bookName }}</el-dropdown-item>      
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -19,50 +19,76 @@
         </div>
       </template>
       
-      <div class="word-display">
-        <div v-if="!userInputMode">
-          <div class="word-section">
-            <h1 class="word">{{ currentWord.word }}</h1>
-            <div class="word-meaning">{{ currentWord.meaning }}</div>
-            <button class="pronunciation-btn" @click="playPronunciation">
-              <i class="fas fa-volume-up"></i>
-            </button>
+      <!-- 学习完成界面 -->
+      <div v-if="isLearningCompleted" class="completion-container">
+        <div class="completion-stats">
+          <div class="completion-stat-item">
+            <div class="completion-stat-value">{{ learnedToday }}</div>
+            <div class="completion-stat-name">学习单词数</div>
+          </div>
+          <div class="completion-stat-item">
+            <div class="completion-stat-value">{{ reviewToday }}</div>
+            <div class="completion-stat-name">复习单词数</div>
+          </div>
+          <div class="completion-stat-item">
+            <div class="completion-stat-value">{{ learnedToday + reviewToday }}</div>
+            <div class="completion-stat-name">总计单词数</div>
           </div>
         </div>
-        <div v-else>
-          <div class="user-input-section">
-            <h3>请输入英文单词：</h3>
-            <div class="meaning-hint">{{ currentWord.meaning }}</div>
-            <el-input
-              v-model="userInput"
-              placeholder="请输入英文单词"
-              class="word-input"
-              @keyup.enter="checkAnswer(currentWord.state || 0,currentWord.wordId)"
-            ></el-input>
-            <div v-if="showResult" class="result-feedback">
-              <div v-if="isCorrect" class="correct-answer">
-                <i class="fas fa-check-circle"></i> 正确！
-              </div>
-              <div v-else class="wrong-answer">
-                <i class="fas fa-times-circle"></i> 错误！正确答案是：{{ currentWord.word }}
+        <div class="completion-message">
+          恭喜你完成了今天的学习目标！
+          <br>继续保持，你会变得越来越棒！
+        </div>
+        <el-button class="btn completion-btn" @click="restartLearning">继续学习</el-button>
+      </div>
+      
+      <!-- 正常学习界面 -->
+      <div v-else>
+        <div class="word-display">
+          <div v-if="!userInputMode">
+            <div class="word-section">
+              <h1 class="word">{{ currentWord.word }}</h1>
+              <div class="word-meaning">{{ currentWord.meaning }}</div>
+              <button class="pronunciation-btn" @click="playPronunciation">
+                <i class="fas fa-volume-up"></i>
+              </button>
+            </div>
+          </div>
+          <div v-else>
+            <div class="user-input-section">
+              <h3>请输入英文单词：</h3>
+              <div class="meaning-hint">{{ currentWord.meaning }}</div>
+              <el-input
+                v-model="userInput"
+                placeholder="请输入英文单词"
+                class="word-input"
+                @keyup.enter="checkAnswer(currentWord.state || 0,currentWord.wordId)"
+              ></el-input>
+              <div v-if="showResult" class="result-feedback">
+                <div v-if="isCorrect" class="correct-answer">
+                  <i class="fas fa-check-circle"></i> 正确！
+                </div>
+                <div v-else class="wrong-answer">
+                  <i class="fas fa-times-circle"></i> 错误！正确答案是：{{ currentWord.word }}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <div class="progress-section">
-        <el-progress :percentage="progress" :format="progressFormat" stroke="#6A8FBF"/>
-        <div class="progress-info">
-          <span>{{ currentIndex + 1 }} / {{ vocabularyList.length }}</span>
-          <span>正确率: {{ accuracy }}%</span>
+        
+        <div class="progress-section">
+          <el-progress :percentage="progress" :format="progressFormat" stroke="#6A8FBF"/>
+          <div class="progress-info">
+            <span>{{ currentIndex + 1 }} / {{ vocabularyList.length }}</span>
+          </div>
         </div>
-      </div>
-      
-      <div class="action-buttons">
-        <el-button class="btn" @click="previousWord" :disabled="currentIndex === 0">上一个</el-button>
-        <el-button class="btn" type="primary" @click="nextStep" v-if="!userInputMode">默写</el-button>
-        <el-button class="btn" type="primary" @click="checkAnswer(currentWord.state || 0,currentWord.wordId)" v-else>提交答案</el-button>
+        
+        <div class="action-buttons">
+          <el-button class="btn" @click="previousWord" :disabled="currentIndex === 0">上一个</el-button>
+          <el-button class="btn" type="primary" @click="nextStep" v-if="!userInputMode">默写</el-button>
+          <el-button class="btn" type="primary" @click="checkAnswer(currentWord.state || 0,currentWord.wordId)" v-else>提交答案</el-button>
+          <el-button class="btn" @click="pass(currentWord.wordId,currentWord.state || 0)" >已会</el-button>
+        </div>
       </div>
     </el-card>
     
@@ -75,38 +101,30 @@
       <div class="stats-grid">
         <div class="stat-box">
           <div class="stat-icon">
+            <i class="fas fa-bell"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ reviewToday }}</div>
+            <div class="stat-name">今日复习数</div>
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">
             <i class="fas fa-book"></i>
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ learnedToday }}</div>
-            <div class="stat-name">今日学习</div>
+            <div class="stat-name">今日背诵数</div>
           </div>
         </div>
-        <div class="stat-box">
-          <div class="stat-icon">
-            <i class="fas fa-check"></i>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">{{ correctCount }}</div>
-            <div class="stat-name">正确单词</div>
-          </div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-icon">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">{{ learningTime }}分钟</div>
-            <div class="stat-name">学习时长</div>
-          </div>
-        </div>
+
       </div>
     </el-card>
   </div>
 </template>
 
 <script>
-import {changeBook , getWordList ,getBookList ,getCurrentBook ,updateWordStatus} from '../api/word'
+import {setKnow ,getContinueLearn,getNumTodayAlready, changeBook , getWordList ,getBookList ,getCurrentBook ,updateWordStatus} from '../api/word'
 export default {
   name: 'VocabularyView',
   data() {
@@ -144,10 +162,10 @@ export default {
       userInput: '',
       showResult: false,
       isCorrect: false,
-      correctCount: 0,
-      totalAttempts: 0, //今日总学习单词数
       learnedToday: 0, //今日已学习单词数
-      startTime: new Date()
+      reviewToday:0, //今日复习单词数
+      isLearningCompleted: false, // 学习是否完成的状态标志
+      totalMax: 0 // 最大下标
     }
   },
   computed: {
@@ -155,19 +173,22 @@ export default {
       return this.vocabularyList[this.currentIndex]
     },
     progress() {
-      return ((this.currentIndex + 1) / this.vocabularyList.length) * 100
+      return ((this.currentIndex ) / this.vocabularyList.length) * 100
     },
-    accuracy() {
-      if (this.totalAttempts === 0) return 0
-      return Math.round((this.correctCount / this.totalAttempts) * 100)
-    },
-    learningTime() {
-      const now = new Date()
-      const diffMinutes = Math.floor((now - this.startTime) / 60000)
-      return Math.max(0, diffMinutes)
-    }
   },
   methods: {
+    async pass(id,state) {
+      await setKnow({wordId:id,state:state});
+      this.currentIndex++;
+      this.totalMax++;
+    },
+    async restartLearning() {
+      this.vocabularyList = await getContinueLearn()
+      this.isLearningCompleted = false
+      this.currentIndex = 0
+      this.userInputMode = false
+      this.showResult = false
+    },
     async init(){
       try{
         const bookName = await getCurrentBook();
@@ -176,16 +197,21 @@ export default {
         if(book != null) this.bookList = book;
         const word = await getWordList();
         if(word != null) this.vocabularyList = word;
-        
+        if(word.length === 0)  this.isLearningCompleted = true;
+        const learned = await getNumTodayAlready();
+        if(learned != null) {
+          this.learnedToday = learned.learnNum;
+          this.reviewToday = learned.reviewNum;
+        }
         
       }catch(error){
         console.log(error)
       }
     },
-    async changeBookID(value) {
+    async changeBookID(id,bookName) {
       try{
-        this.selectedBook = value;
-        await changeBook(value);
+        this.selectedBook = bookName;
+        await changeBook(id);
         const word = await getWordList();
         if(word != null) this.vocabularyList = word;
       }catch(error){
@@ -210,20 +236,24 @@ export default {
       this.showResult = false
     },
     async checkAnswer(state,id) {
-      this.totalAttempts++
       this.showResult = true
       
       if (this.userInput.toLowerCase().trim() === this.currentWord.word.toLowerCase()) {
         this.isCorrect = true
-        this.correctCount++
-        this.learnedToday++
-        await updateWordStatus(state,id);
+        if(this.totalMax == this.currentIndex){
+          await updateWordStatus(state,id);
+          this.totalMax++;
+        }
+        const learned = await getNumTodayAlready();
+        if(learned != null) {
+          this.learnedToday = learned.learnNum;
+          this.reviewToday = learned.reviewNum;
+        }
         setTimeout(() => {
           this.nextWord()
         }, 800)
       } else {
         this.isCorrect = false
-        // 延迟重置输入模式
         setTimeout(() => {
           this.userInputMode = false
           this.showResult = false
@@ -236,8 +266,7 @@ export default {
         this.userInputMode = false
         this.showResult = false
       } else {
-        // 单词学习完成
-        alert('恭喜你完成了今天的单词学习！')
+        this.isLearningCompleted = true
       }
     },
     previousWord() {
@@ -251,10 +280,7 @@ export default {
   created(){
     this.init()
   },
-  mounted() {
-    // 初始化学习数据
-    this.startTime = new Date()
-  }
+
 }
 </script>
 
@@ -263,6 +289,77 @@ export default {
   background-color: #6A8FBF;
   border-color: #E8F0F7;
   color:#f5f7fa
+}
+
+/* 学习完成界面样式 */
+.completion-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 400px;
+  text-align: center;
+}
+
+.completion-icon {
+  font-size: 80px;
+  color: #67c23a;
+  margin-bottom: 30px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-30px); }
+  60% { transform: translateY(-15px); }
+}
+
+
+.completion-stats {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 30px;
+}
+
+.completion-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.completion-stat-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #4A6FA5;
+  margin-bottom: 10px;
+}
+
+.completion-stat-name {
+  font-size: 16px;
+  color: #666;
+}
+
+.completion-message {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.completion-btn {
+  font-size: 18px;
+  padding: 12px 36px;
+  background-color: #4A6FA5;
+  border-color: #4A6FA5;
+}
+
+.completion-btn:hover {
+  background-color: #6A8FBF;
+  border-color: #6A8FBF;
 }
 /* 修改按钮 hover 状态颜色 */
 .el-dropdown .el-button:hover  {

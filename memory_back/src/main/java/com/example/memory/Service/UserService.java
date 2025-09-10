@@ -2,16 +2,15 @@ package com.example.memory.Service;
 
 import com.example.memory.mapper.UserMapper;
 
-import com.example.memory.pojo.Book;
 import com.example.memory.pojo.User;
+import com.example.memory.pojo.UserLearn;
 import com.example.memory.pojo.Word;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -77,9 +76,30 @@ public class UserService {
     /*
      * 获取用户最近学习记录
      */
-//    public List<UserLearn> learn(String username) {
-//        return userMapper.learn(username);
-//    }
+    public List<Map<Object, Object>> learn(String username) {
+        List<UserLearn> tmeList = userMapper.learn(username);
+        List<Map<Object, Object>> ansList = new ArrayList<>();
+        for(UserLearn learn:tmeList){
+            Map<Object, Object> map = new HashMap<>();
+            // 只添加值不为0的字段
+            map.put("date", learn.getDate());
+            map.put("username", learn.getUsername());
+            if (learn.getNewLearn() > 0) {
+                map.put("new_learn", learn.getNewLearn());
+            }
+            if (learn.getReview() > 0) {
+                map.put("review", learn.getReview());
+            }
+            if (learn.getRead() > 0) {
+                map.put("read", learn.getRead());
+            }
+            if (learn.getSpeek() > 0) {
+                map.put("speek", learn.getSpeek());
+            }
+            ansList.add(map);
+        }
+        return ansList;
+    }
 
     public int continueLearn(String username) {
         return userMapper.searchUser(username).getContinueDay();
@@ -93,14 +113,23 @@ public class UserService {
         //走两个逻辑
         // 1.拿到单词的sate,然后更新用户今日学习表中的数据
         // 2.更新单词的学习状态
+
+        // 补充：判断单词是否掌握，如果掌握，要维护用户表
         if(word.getState() == 0){
             userMapper.addWordStatus(word,username);
             userMapper.updateNewLearnToday(username);
-        }else{
+        }else if(word.getState() < 4){
             userMapper.updateWordStatus(word,username);
             userMapper.updateReviewToday(username);
+        }else{
+            userMapper.updateReviewToday(username);
+            userMapper.updateWordNums(username);
         }
 
 
+    }
+
+    public void updateUser(User user, String username) {
+        userMapper.updateUser(user,username);
     }
 }

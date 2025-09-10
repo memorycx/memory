@@ -5,6 +5,7 @@ import com.example.memory.Service.UserService;
 import com.example.memory.pojo.Result;
 import com.example.memory.pojo.User;
 
+import com.example.memory.pojo.UserLearn;
 import com.example.memory.pojo.Word;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 
 @Slf4j
@@ -36,6 +38,12 @@ public class UserController {
         }
         return Result.success(user);
     }
+    @PostMapping("api/user/update")
+    public Result updateUser(@RequestBody User user, HttpServletRequest request){
+        String username = request.getAttribute("username").toString();
+        userService.updateUser(user,username);
+        return Result.success("更新成功");
+    }
     /**
      * 获取用户单背诵书籍的单词数量
      */
@@ -47,17 +55,17 @@ public class UserController {
     }
 
     /*
-     获取用户最近学习记录
+     获取用户最近学习记录,返回的是一个数组
      */
-//    @GetMapping("api/user/tableData")
-//    public Result learn(HttpServletRequest request){
-//        String username = request.getAttribute("username").toString();
-//        List<UserLearn> userLearns = userService.learn(username);
-//        if(userLearns == null){
-//            return Result.error("暂无学习记录");
-//        }
-//        return Result.success(userLearns);
-//    }
+    @GetMapping("api/user/tableData")
+    public Result learn(HttpServletRequest request){
+        String username = request.getAttribute("username").toString();
+        List<Map<Object, Object>> LearnList = userService.learn(username);
+        if(LearnList == null){
+            return Result.error("暂无学习记录");
+        }
+        return Result.success(LearnList);
+    }
 
     /*
     获取用户连续学习天数
@@ -71,10 +79,9 @@ public class UserController {
 
     @PostMapping("api/user/updateWordStatus")
     public Result updateWordStatus(@RequestBody Word word, HttpServletRequest request){
-        log.info("{}",word.toString());
         String username = request.getAttribute("username").toString();
         userService.updateWordStatus(word,username);
-        return Result.success("更改成功");
+        return Result.success("拼写正确");
     }
 
 

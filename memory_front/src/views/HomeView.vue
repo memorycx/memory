@@ -28,7 +28,7 @@
             </div>
             <div class="info-item">
               <span>背诵书籍: {{ userData.currentBookId }}</span>
-              <el-button type="primary" class="edit-button">编辑个人资料</el-button>
+              <el-button type="primary" class="edit-button" @click="openEditDialog">编辑个人资料</el-button>
             </div>
           </div>
         </div>
@@ -82,21 +82,91 @@
     <h1>学习记录</h1>
     <el-table :data="tableData" style="width: 100%">
       <el-table-column prop="date" label="Date" width="180" />
-      <el-table-column prop="name" label="Name" width="180" />
+      <el-table-column prop="username" label="Name" width="180" />
       <el-table-column prop="content" label="Content" />
     </el-table>
-
-  </div>  
-
-</template>
+  </div>
+    
+    <!-- 编辑个人资料弹窗 -->
+    <el-dialog
+      title="编辑个人资料"
+      v-model="editDialogVisible"
+      width="40%"
+      :before-close="closeEditDialog"
+      class="edit-profile-dialog"
+    >
+      <el-form
+        ref="editFormRef"
+        :model="editForm"
+        label-width="80px"
+        class="edit-profile-form"
+      >
+        <el-form-item label="性别" prop="gender">
+          <el-radio-group v-model="editForm.gender">
+            <el-radio label="1">男</el-radio>
+            <el-radio label="0">女</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        
+        <el-form-item label="地址" prop="address">
+          <el-input
+            v-model="editForm.address"
+            placeholder="请输入地址"
+            maxlength="50"
+            show-word-limit
+          ></el-input>
+        </el-form-item>
+        
+        <el-form-item label="学校" prop="school">
+          <el-input
+            v-model="editForm.school"
+            placeholder="请输入学校"
+            maxlength="50"
+            show-word-limit
+          ></el-input>
+        </el-form-item>
+        
+        <el-form-item label="每日新学" prop="newLearnPlane">
+          <el-input-number
+            v-model="editForm.newLearnPlane"
+            :min="1"
+            :max="100"
+            label="每日新学数量"
+          ></el-input-number>
+        </el-form-item>
+        
+        <el-form-item label="背诵书籍" prop="currentBookId">
+          <el-select
+            v-model="editForm.currentBookId"
+            placeholder="请选择背诵书籍"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in bookOptions"
+              :key="item.id"
+              :label="item.bookName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="closeEditDialog">取消</el-button>
+        <el-button type="primary" @click="saveProfile">确定</el-button>
+      </div>
+    </el-dialog>
+  </template>
 
 <script>
 import 'cal-heatmap/cal-heatmap.css'
-import { info , wordNumber ,tableData ,day} from '../api/user'
+import { update,info , wordNumber ,tableData ,day} from '../api/user'
+import { getBookList } from '../api/word'
 export default {
   name: 'HomeView',
   data() {
     return {
+      fieldsToSplit : ['new_learn', 'review', 'read', 'speek'],
       userData:{
         username: 'Qiushui',
         email: 'example@example.com',
@@ -113,60 +183,99 @@ export default {
       day : 20,
       allWordNums : 0,
       tableData: [
-        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
-        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
-        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
-        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
-        { date: '2021-10-10', name: 'QiuShui', content: '背20个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '复习12个单词' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读1篇文章' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },
-        { date: '2021-10-11', name: 'QiuShui', content: '阅读2篇文章' },]
+        { date: '2021-10-10', username: 'QiuShui', content: '背20个单词' },
+        { date: '2021-10-11', username: 'QiuShui', content: '复习12个单词' },
+        { date: '2021-10-11', username: 'QiuShui', content: '阅读1篇文章' },
+        { date: '2021-10-11', username: 'QiuShui', content: '阅读2篇文章' }
+      ],
+      // 编辑个人资料弹窗相关
+      editDialogVisible: false,
+      editForm: {
+        gender: 1,
+        address: '',
+        school: '',
+        newLearnPlane: 25,
+        currentBookId: 1
+      },
+      // 背诵书籍选项
+      bookOptions: [
+        { bookName: 'CET4', id: 1 },
+        { bookName: 'CET6', id: 2 },
+        { bookName: 'GRE', id: 3 },
+        { bookName: 'TOEFL', id: 4 }
+      ]
     }
   },
   methods: {
-    async fetchData() {
-      try{
-         const data = await info()
-         if(data != null) this.userData = data
+    openEditDialog() {
+      this.editForm = {
+        gender: this.userData.gender,
+        address: this.userData.address,
+        school: this.userData.school,
+        newLearnPlane: this.userData.newLearnPlane,
+        currentBookId: this.userData.currentBookId
       }
-      catch(error){
-        console.log(error)
-      }
+      this.editDialogVisible = true
     },
-    async fetchWordNumber(){
-      try{
-        const data = await wordNumber()
-        if(data != null) this.allWordNums = data
-      }
-      catch(error){
-        console.log(error)
-      }
+    
+    // 关闭编辑个人资料弹窗
+    closeEditDialog() {
+      this.editDialogVisible = false
     },
-    async fetchTableData(){
+    
+
+    async saveProfile() {
+      // 更新用户数据
+      this.userData.gender = this.editForm.gender
+      this.userData.address = this.editForm.address
+      this.userData.school = this.editForm.school
+      this.userData.newLearnPlane = this.editForm.newLearnPlane
+      this.userData.currentBookId = this.editForm.currentBookId
+      
+      
+      await update(this.userData)
+      
+      // 显示成功提示
+      this.$message({
+        message: '个人资料更新成功',
+        type: 'success'
+      })
+      
+      // 关闭弹窗
+      this.editDialogVisible = false
+    },
+    splitData(data) {
+        this.fieldsToSplit.forEach(field => {
+            if (data.hasOwnProperty(field)) {
+                // 创建新对象，包含公共字段和当前字段
+                const newObj = {
+                    date: data.date,
+                    username: data.username
+                };
+                if(field === "new_learn") newObj["content"] = "新学" + data[field] +"个单词";
+                if(field === "review") newObj["content"] = "复习" + data[field] +"个单词";
+                if(field === "read") newObj["content"] = "阅读" + data[field] + "篇文章";
+                if(field === "speek") newObj["content"] = "口语" + data[field] + "次";
+                this.tableData.push(newObj);
+            }
+        });
+    },
+
+    async init() {
       try{
+        this.userData = await info()
+        this.allWordNums = await wordNumber()
+        this.day = await day()
+        this.bookOptions = await getBookList()
+
         const data = await tableData()
-        if(data != null) this.tableData = data
-      }
-      catch(error){
-        console.log(error)
-      }
-    },
-    async fetchDay(){
-      try{
-        const data = await day()
-        if(data != null) this.day = data
+        if(data != null){
+          this.tableData = [];
+          data.forEach(item => {
+            this.splitData(item)
+          })
+        }
+
       }
       catch(error){
         console.log(error)
@@ -174,12 +283,10 @@ export default {
     }
   },
   mounted() {
-    this.fetchWordNumber()
-    this.fetchData()
-    this.fetchTableData()
-    this.fetchDay()
+    this.init();
   }
 }
+  
 </script>
 
 <style scoped>
@@ -330,7 +437,38 @@ export default {
 }
 
 .stat-label {
-  color: #666;
-  font-size: 14px;
-}
+    color: #666;
+    font-size: 14px;
+  }
+  
+  /* 编辑个人资料弹窗样式 */
+  .edit-profile-dialog {
+    .el-dialog__header {
+      background-color: #f5f7fa;
+      border-bottom: 1px solid #e4e7ed;
+    }
+    .el-dialog__title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #303133;
+    }
+    .edit-profile-form {
+      margin-top: 20px;
+      .el-form-item {
+        margin-bottom: 20px;
+      }
+      .el-radio-group {
+        display: flex;
+        .el-radio {
+          margin-right: 20px;
+        }
+      }
+      .el-input, .el-select {
+        width: 100%;
+      }
+    }
+    .dialog-footer {
+      text-align: right;
+    }
+  }
 </style>

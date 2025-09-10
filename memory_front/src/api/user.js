@@ -55,3 +55,13 @@ export function day() {
     console.log(error)
   })
 }
+
+export function update(data) {
+  return request({
+    url: 'api/user/update',
+    method: 'POST',
+    data
+  }).catch(error => {
+    console.log(error)
+  })
+}

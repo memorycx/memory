@@ -24,6 +24,10 @@
             <i class="fas fa-microphone"></i>
             <span>口语训练</span>
           </router-link>
+          <router-link to="/login" class="nav-item" :class="{ active: $route.path === '/login' }">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>登录</span>
+          </router-link>
         </nav>
         <!-- <div class="user-info">
           <el-dropdown>

@@ -27,8 +27,7 @@ public class WordController {
     @GetMapping("/api/word/getCurrentBook")
     public Result getCurrentBook(HttpServletRequest request) {
         String username = (String) request.getAttribute("username");
-        int currentBook = wordService.getCurrentBookId(username);
-        return Result.success(currentBook);
+        return Result.success(wordService.getCurrentBookId(username));
     }
 
     /**
@@ -36,8 +35,7 @@ public class WordController {
      */
     @GetMapping("/api/word/getBookList")
     public Result getBookList() {
-        List<Book> bookList = wordService.getBookList();
-        return Result.success(bookList);
+        return Result.success(wordService.getBookList());
     }
 
     /**
@@ -56,8 +54,38 @@ public class WordController {
     @GetMapping("/api/word/getWordList")
     public Result getWordList(HttpServletRequest request) {
         String username = (String) request.getAttribute("username");
-        List<Word> wordList = wordService.getWordList(username);
-        return Result.success(wordList);
+        return Result.success(wordService.getWordList(username));
     }
+
+    /*
+    获得今日已经背诵的单词数量
+     */
+    @GetMapping("api/user/getToday")
+    public Result getNums(HttpServletRequest request) {
+        String username = (String) request.getAttribute("username");
+        return Result.success(wordService.getNums(username));
+    }
+
+    /*
+    继续学习
+     */
+    @GetMapping("/api/word/continueLearn")
+    public Result continueLearn(HttpServletRequest request) {
+        String username = (String) request.getAttribute("username");
+        return Result.success(wordService.getContinueLearnWord(username));
+    }
+
+    @GetMapping("/api/word/setKnow")
+    public Result setKnow(HttpServletRequest request,
+                          @RequestParam Integer wordId,
+                          @RequestParam Integer state) {
+        String username = (String) request.getAttribute("username");
+        wordService.setKnow(wordId,state,username);
+        return Result.success();
+    }
+
+
+
+
 
 }

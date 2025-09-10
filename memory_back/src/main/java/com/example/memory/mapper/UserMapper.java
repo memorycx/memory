@@ -2,9 +2,11 @@ package com.example.memory.mapper;
 
 
 import com.example.memory.pojo.User;
+import com.example.memory.pojo.UserLearn;
 import com.example.memory.pojo.Word;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
 
 
 @Mapper
@@ -38,8 +40,8 @@ public interface UserMapper {
     /**
      * 获取用户最近学习记录
      */
-//    @Select("SELECT date,username,content FROM user_day_num WHERE username = #{username} ORDER BY date DESC LIMIT 7")
-//    List<UserLearn> learn(String username);
+    @Select("SELECT `date`,username,new_learn,review,`read`,speek FROM user_day_num WHERE username = #{username} ORDER BY date DESC LIMIT 10")
+    List<UserLearn> learn(String username);
 
     /**
      * 更改用户目前在背的词汇书
@@ -66,4 +68,10 @@ public interface UserMapper {
     void updateNewLearnToday(String username);
 
     void updateReviewToday(String username);
+
+    @Update("update users set word_nums = word_nums + 1 where username = #{username}")
+    void updateWordNums(String username);
+
+    @Update("update users set gender = #{user.gender},address = #{user.address},school = #{user.school},new_learn_plane = #{user.newLearnPlane} where username = #{username}")
+    void updateUser(User user, String username);
 }
