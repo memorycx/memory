@@ -1,6 +1,6 @@
 package com.example.memory.Service;
 
-
+import com.example.memory.mapper.UserMapper;
 import com.example.memory.mapper.WordMapper;
 import com.example.memory.pojo.Book;
 import com.example.memory.pojo.User;
@@ -17,6 +17,9 @@ public class WordService {
 
     @Autowired
     WordMapper wordMapper;
+
+    @Autowired
+    UserMapper userMapper;
 
     /**
      * 获取书籍的单词数量
@@ -120,10 +123,23 @@ public class WordService {
         // 1.检查单词状态
         // 如果是0，则需要添加
         // 如果不是0，则需要更新单词状态
+        Word word = new Word();
+        word.setWordId(wordId);
+        word.setState(state);
+
+
         if(state == 0){
             wordMapper.addWordStatus(wordId,username);
+            userMapper.updateNewLearnToday(username);
         }else{
             wordMapper.updateWordStatus(wordId,username);
+            userMapper.updateReviewToday(username);
         }
+        userMapper.updateWordNums(username);
     }
+
+    public Word queryWord(String word) {
+        return wordMapper.queryWord(word);
+    }
+
 }

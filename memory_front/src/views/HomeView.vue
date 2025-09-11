@@ -21,10 +21,10 @@
             </div>
             <div class="info-item">
 
-              <span>每日新学: {{ userData.newLearnPlane }}</span>
+              <span>每日目标: {{ userData.newLearnPlane }}</span>
             </div>
             <div class="info-item">
-              <span>每日复习: {{ userData.reviewPlane }}</span>
+              <span>今日需复习: {{ userData.reviewPlane }}</span>
             </div>
             <div class="info-item">
               <span>背诵书籍: {{ userData.currentBookId }}</span>
@@ -94,6 +94,7 @@
       width="40%"
       :before-close="closeEditDialog"
       class="edit-profile-dialog"
+      align-center
     >
       <el-form
         ref="editFormRef"
@@ -263,10 +264,22 @@ export default {
 
     async init() {
       try{
-        this.userData = await info()
-        this.allWordNums = await wordNumber()
-        this.day = await day()
-        this.bookOptions = await getBookList()
+        const userInfo = await info()
+        if (userInfo) {
+          this.userData = userInfo
+        }
+        const wordNum = await wordNumber()
+        if (wordNum !== undefined) {
+          this.allWordNums = wordNum
+        }
+        const dayCount = await day()
+        if (dayCount !== undefined) {
+          this.day = dayCount
+        }
+        const bookList = await getBookList()
+        if (bookList) {
+          this.bookOptions = bookList
+        }
 
         const data = await tableData()
         if(data != null){
@@ -278,7 +291,8 @@ export default {
 
       }
       catch(error){
-        console.log(error)
+        console.log('Error fetching data:', error)
+        // 保持使用本地默认数据
       }
     }
   },

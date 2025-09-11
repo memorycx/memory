@@ -18,14 +18,14 @@
           <p class="article-summary">{{ article.summary }}</p>
           <div class="article-meta">
             <span>{{ article.source }}</span>
-            <span>{{ article.wordCount }} 词</span>
+            <span>{{ article.nums }} 词</span>
           </div>
         </div>
       </div>
     </el-card>
     
-    <div class="main-content">
-      <el-card class="article-content-card">
+    <div class="main-endContent">
+      <el-card class="article-endContent-card">
         <template #header>
           <div class="card-header">
             <span>{{ selectedArticle?.title || '请选择一篇文章开始阅读' }}</span>
@@ -39,18 +39,28 @@
             </el-select>
           </div>
         </template>
-        <div v-if="selectedArticle" class="article-content">
+        <div v-if="selectedArticle" class="article-endContent">
           <div class="article-header">
             <h2>{{ selectedArticle.title }}</h2>
             <div class="article-info">
               <span>{{ selectedArticle.source }}</span>
               <span>{{ new Date(selectedArticle.date).toLocaleDateString() }}</span>
-              <span>{{ selectedArticle.wordCount }} 词</span>
+              <span>{{ selectedArticle.nums }} 词</span>
             </div>
           </div>
           <div class="article-body">
-            <p v-for="paragraph in selectedArticle.content" :key="paragraph.index">
-              {{ paragraph.text }}
+            <p v-for="paragraph in selectedArticle.endContent" :key="paragraph.index">
+              <template v-for="(word, index) in splitTextIntoWords(paragraph.text)">
+                <span 
+                  v-if="word.trim()"
+                  :key="index"
+                  @click="handleWordClick(word)"
+                  class="clickable-word"
+                >
+                  {{ word }}
+                </span>
+                <template v-else>{{ "&hairsp;" }}</template>
+              </template>
             </p>
           </div>
         </div>
@@ -69,141 +79,184 @@
           </div>
         </template>
         <div v-if="vocabularyNotes.length > 0" class="vocabulary-list">
-          <div v-for="(note, index) in vocabularyNotes" :key="index" class="vocabulary-item">
+          <div v-for="note in vocabularyNotes" :key="note.wordId" class="vocabulary-item">
             <div class="vocabulary-word">{{ note.word }}</div>
             <div class="vocabulary-meaning">{{ note.meaning }}</div>
-            <el-button type="text" @click="removeVocabularyNote(index)" size="small">
+            <el-button type="text" @click="removeVocabularyNote(note.wordId)" size="small">
               <i class="fas fa-times"></i>
             </el-button>
           </div>
         </div>
         <div v-else class="no-vocabulary">
           <p>暂无记录的陌生词汇</p>
-          <p class="hint">提示：遇到陌生词汇时，请点击添加按钮记录</p>
-        </div>
-        
-        <div class="add-vocabulary-section">
-          <el-input
-            v-model="newVocabulary.word"
-            placeholder="输入陌生单词"
-            class="vocabulary-input"
-          ></el-input>
-          <el-input
-            v-model="newVocabulary.meaning"
-            placeholder="输入单词释义"
-            class="vocabulary-input"
-          ></el-input>
-          <el-button type="primary" @click="addVocabularyNote">添加词汇</el-button>
+          <p class="hint">记录陌生词汇</p>
         </div>
       </el-card>
     </div>
+
+    <!-- 单词点击弹窗 -->
+    <el-dialog
+      title="单词释义"
+      v-model="wordDialogVisible"
+      width="30%"
+      :before-close="handleDialogClose"
+      align-center
+    >
+      <div class="word-dialog-content">
+        <h3>{{ clickedWord }}</h3>
+      </div>
+      <div class="meaning-hint">
+        {{ temMean }}
+      </div>
+
+      <div class="dia-button">
+        <el-button type="primary" @click="addWord()">添加为陌生词汇</el-button>
+      </div>  
+    </el-dialog>
   </div>
 </template>
 
-<script>
-import { ref, computed } from 'vue'
 
+<script>
+import { getArticleList , queryWord,addUnknownWord ,getUnknownWords, deleteUnknownWord} from '../api/text'
 export default {
   name: 'ReadingView',
-  setup() {
-    const articles = ref([
-      {
-        id: 1,
-        title: 'How to Improve Your English Reading Skills',
-        summary: 'Learn effective strategies to enhance your English reading comprehension and speed.',
-        source: 'English Learning Magazine',
-        date: '2024-08-15',
-        wordCount: 850,
-        content: [
-          { index: 1, text: 'Improving your English reading skills is essential for academic and professional success. Whether you are a student preparing for exams or a professional looking to advance your career, strong reading skills can open up new opportunities.' },
-          { index: 2, text: 'One effective strategy is to start with materials that match your current level. If you are a beginner, try children\'s books or simple news articles. As you progress, gradually move to more complex texts. This approach helps build confidence and vocabulary.' },
-          { index: 3, text: 'Another important technique is active reading. Instead of passively scanning the text, engage with it by asking questions, making predictions, and summarizing key points. This not only improves comprehension but also retention of information.' },
-          { index: 4, text: 'Vocabulary building is also crucial. Keep a notebook or use a digital tool to record new words you encounter. Review these words regularly to reinforce your memory. Over time, you will notice a significant improvement in your reading fluency.' },
-          { index: 5, text: 'Finally, practice regularly. Set aside dedicated time each day for reading. Consistency is key to developing any skill, and reading is no exception. With patience and persistence, you will see remarkable progress in your English reading abilities.' }
-        ]
-      },
-      {
-        id: 2,
-        title: 'The Benefits of Reading Daily',
-        summary: 'Discover how daily reading can enhance your cognitive abilities, vocabulary, and overall knowledge.',
-        source: 'Health & Wellness Journal',
-        date: '2024-08-10',
-        wordCount: 620,
-        content: [
-          { index: 1, text: 'In today\'s digital age, many people spend more time scrolling through social media than reading books. However, maintaining a daily reading habit offers numerous benefits that cannot be replicated by other activities.' },
-          { index: 2, text: 'Research has shown that regular reading can improve cognitive function and memory. It stimulates the brain, keeping it active and engaged. This mental exercise can even help prevent age-related cognitive decline, such as Alzheimer\'s disease.' },
-          { index: 3, text: 'Reading also expands your vocabulary and improves language skills. Exposure to new words in context helps with retention and application. This is particularly beneficial for language learners who want to achieve fluency.' },
-          { index: 4, text: 'Moreover, reading can reduce stress and promote relaxation. Getting lost in a good book can transport you to different worlds, providing a much-needed escape from daily pressures. It can also improve sleep quality when done before bed, unlike screen time which can disrupt sleep patterns.' }
-        ]
-      },
-      {
-        id: 3,
-        title: 'The Importance of Lifelong Learning',
-        summary: 'Explore why continuous education is vital in today\'s rapidly changing world.',
-        source: 'Education Today',
-        date: '2024-08-05',
-        wordCount: 780,
-        content: [
-          { index: 1, text: 'In the past, education was often viewed as a phase that ended when one entered the workforce. However, in today\'s fast-paced world, lifelong learning has become a necessity. Technologies evolve, industries transform, and new knowledge emerges at an unprecedented rate.' },
-          { index: 2, text: 'Lifelong learning refers to the ongoing, voluntary pursuit of knowledge for personal or professional reasons. It can take many forms, from formal education to self-study, online courses, workshops, and more. The key is to maintain a curious mindset and a willingness to adapt.' },
-          { index: 3, text: 'One of the main benefits of lifelong learning is professional development. In competitive job markets, individuals who continuously update their skills are more likely to secure promotions and stay relevant in their fields. Employers value employees who show initiative and a commitment to growth.' },
-          { index: 4, text: 'Lifelong learning also has personal benefits. It keeps the mind active, enhances self-esteem, and provides a sense of accomplishment. It can open up new hobbies, interests, and social connections. Ultimately, it contributes to a more fulfilling and meaningful life.' }
-        ]
+  data() {
+    return {
+      articles: [
+        {
+          id: 1,
+          title: 'How to Improve Your English Reading Skills',
+          summary: 'Learn effective strategies to enhance your English reading comprehension and speed.',
+          source: 'English Learning Magazine',
+          date: '2024-08-15',
+          nums: 850,
+          endContent: [
+            { index: 1, text: 'Improving your English reading skills is essential for academic and professional success. Whether you are a student preparing for exams or a professional looking to advance your career, strong reading skills can open up new opportunities.' },
+            { index: 2, text: 'One effective strategy is to start with materials that match your current level. If you are a beginner, try children\'s books or simple news articles. As you progress, gradually move to more complex texts. This approach helps build confidence and vocabulary.' },
+            { index: 3, text: 'Another important technique is active reading. Instead of passively scanning the text, engage with it by asking questions, making predictions, and summarizing key points. This not only improves comprehension but also retention of information.' },
+            { index: 4, text: 'Vocabulary building is also crucial. Keep a notebook or use a digital tool to record new words you encounter. Review these words regularly to reinforce your memory. Over time, you will notice a significant improvement in your reading fluency.' },
+            { index: 5, text: 'Finally, practice regularly. Set aside dedicated time each day for reading. Consistency is key to developing any skill, and reading is no exception. With patience and persistence, you will see remarkable progress in your English reading abilities.' }
+          ]
+        },
+        {
+          id: 2,
+          title: 'The Benefits of Reading Daily',
+          summary: 'Discover how daily reading can enhance your cognitive abilities, vocabulary, and overall knowledge.',
+          source: 'Health & Wellness Journal',
+          date: '2024-08-10',
+          nums: 620,
+          endContent: [
+            { index: 1, text: 'In today\'s digital age, many people spend more time scrolling through social media than reading books. However, maintaining a daily reading habit offers numerous benefits that cannot be replicated by other activities.' },
+            { index: 2, text: 'Research has shown that regular reading can improve cognitive function and memory. It stimulates the brain, keeping it active and engaged. This mental exercise can even help prevent age-related cognitive decline, such as Alzheimer\'s disease.' },
+            { index: 3, text: 'Reading also expands your vocabulary and improves language skills. Exposure to new words in context helps with retention and application. This is particularly beneficial for language learners who want to achieve fluency.' },
+            { index: 4, text: 'Moreover, reading can reduce stress and promote relaxation. Getting lost in a good book can transport you to different worlds, providing a much-needed escape from daily pressures. It can also improve sleep quality when done before bed, unlike screen time which can disrupt sleep patterns.' }
+          ]
+        },
+        {
+          id: 3,
+          title: 'The Importance of Lifelong Learning',
+          summary: 'Explore why continuous education is vital in today\'s rapidly changing world.',
+          source: 'Education Today',
+          date: '2024-08-05',
+          nums: 780,
+          endContent: [
+            { index: 1, text: 'In the past, education was often viewed as a phase that ended when one entered the workforce. However, in today\'s fast-paced world, lifelong learning has become a necessity. Technologies evolve, industries transform, and new knowledge emerges at an unprecedented rate.' },
+            { index: 2, text: 'Lifelong learning refers to the ongoing, voluntary pursuit of knowledge for personal or professional reasons. It can take many forms, from formal education to self-study, online courses, workshops, and more. The key is to maintain a curious mindset and a willingness to adapt.' },
+            { index: 3, text: 'One of the main benefits of lifelong learning is professional development. In competitive job markets, individuals who continuously update their skills are more likely to secure promotions and stay relevant in their fields. Employers value employees who show initiative and a commitment to growth.' },
+            { index: 4, text: 'Lifelong learning also has personal benefits. It keeps the mind active, enhances self-esteem, and provides a sense of accomplishment. It can open up new hobbies, interests, and social connections. Ultimately, it contributes to a more fulfilling and meaningful life.' }
+          ]
+        }
+      ],
+      selectedArticleId: null,
+      vocabularyNotes: [{wordId:-1,word: 'abandon', meaning: 'v. 放弃；抛弃，遗弃'}],
+      // 新增的用于单词点击功能的属性
+      wordDialogVisible: false,
+      clickedWord: '',
+      temMean:'v. 放弃；抛弃，遗弃',
+      temId: -1,
+    }
+  },
+  created() {
+    this.init()
+  },
+  computed: {
+    selectedArticle() {
+      return this.articles.find(article => article.id === this.selectedArticleId)
+    }
+  },
+  methods: {
+    async init(){
+      try {
+        const articles = await getArticleList()
+        this.articles = articles.map(article => ({
+          ...article,
+          endContent: this.transformContent(article.endContent || [])
+        }))
+      } catch (error) {
+        console.error('Failed to get article list:', error)
+        // 保持使用本地数据
       }
-    ])
-    
-    const selectedArticleId = ref(null)
-    const vocabularyNotes = ref([])
-    const newVocabulary = ref({ word: '', meaning: '' })
-    
-    const selectedArticle = computed(() => {
-      return articles.value.find(article => article.id === selectedArticleId.value)
-    })
-    
-    const selectArticle = (id) => {
-      selectedArticleId.value = id
-    }
-    
-    const addVocabularyNote = () => {
-      if (newVocabulary.value.word && newVocabulary.value.meaning) {
-        vocabularyNotes.value.push({
-          word: newVocabulary.value.word,
-          meaning: newVocabulary.value.meaning
-        })
-        // 清空输入框
-        newVocabulary.value.word = ''
-        newVocabulary.value.meaning = ''
-      } else {
-        alert('请输入单词和释义')
+    },
+    transformContent(contentObj) {
+      // 将后端传来的数据转换成前端需要的格式
+      if (!contentObj || typeof contentObj !== 'object') {
+        return []
       }
-    }
+      return Object.keys(contentObj).map((key, idx) => ({
+        index: idx + 1,
+        text: contentObj[key]
+      }))
+    },
+    async selectArticle(id) {
+      this.selectedArticleId = id;
+      this.vocabularyNotes = await getUnknownWords(id)
+    },
+
+    splitTextIntoWords(text) {
+      if (!text) return []
+      // 这个正则表达式会将文本分割成单词、空格和标点符号
+      const words = text.match(/\S+|\s/g) || []
+      return words
+    },
     
-    const removeVocabularyNote = (index) => {
-      vocabularyNotes.value.splice(index, 1)
-    }
-    
-    const clearVocabularyNotes = () => {
-      if (vocabularyNotes.value.length > 0) {
+    async handleWordClick(word) {
+      if (word && word.trim()) {
+        this.clickedWord = word.trim()
+        const result = await queryWord(word.trim())
+        this.temMean = result.meaning || ''
+        this.temId = result.wordId || -1
+        this.wordDialogVisible = true
+      }
+    },
+    // 新增：处理弹窗关闭
+    handleDialogClose() {
+      this.wordDialogVisible = false
+    },
+    async addWord(){
+      await addUnknownWord(this.temId,this.selectedArticleId);
+      this.vocabularyNotes.push({word: this.clickedWord, meaning: this.temMean});
+      this.wordDialogVisible = false
+    },
+
+    async removeVocabularyNote(wordId) {
+      this.vocabularyNotes = this.vocabularyNotes.filter(item => item.wordId !== wordId);
+      await deleteUnknownWord(wordId,this.selectedArticleId)
+    },
+    clearVocabularyNotes() {
+      if (this.vocabularyNotes.length > 0) {
         if (confirm('确定要清空所有陌生词汇记录吗？')) {
-          vocabularyNotes.value = []
+          this.vocabularyNotes.forEach(async (item) => {
+             await deleteUnknownWord(item.wordId,this.selectedArticleId)
+          });
         }
       }
-    }
-    
-    return {
-      articles,
-      selectedArticleId,
-      selectedArticle,
-      vocabularyNotes,
-      newVocabulary,
-      selectArticle,
-      addVocabularyNote,
-      removeVocabularyNote,
-      clearVocabularyNotes
+      this.vocabularyNotes = []
     }
   }
 }
 </script>
+
 
 <style scoped>
 .reading-container {
@@ -262,7 +315,6 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -273,14 +325,14 @@ export default {
   color: #999;
 }
 
-.main-content {
+.main-endContent {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.article-content-card {
+.article-endContent-card {
   flex: 1;
   background-color: white;
   border-radius: 10px;
@@ -288,7 +340,7 @@ export default {
   overflow-y: auto;
 }
 
-.article-content {
+.article-endContent {
   padding: 20px;
 }
 
@@ -320,6 +372,41 @@ export default {
 .article-body p {
   margin-bottom: 20px;
   text-align: justify;
+}
+
+.article-body p span {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.article-body p span:hover {
+  background-color: #f0f0f0;
+}
+
+.clickable-word {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 3px;
+}
+
+.clickable-word:hover {
+  background-color: #f0f0f0;
+}
+
+.dia-button{
+   text-align: center;
+   margin-bottom: 10px;
+}
+.meaning-hint {
+  text-align: center;
+  font-size: 15px;
+  color: #666;
+  margin-bottom: 10px;
+  padding: 10px;
+  /* background-color: #f8f9fa; */
+  border-radius: 8px;
 }
 
 .no-article {
@@ -375,16 +462,6 @@ export default {
   font-size: 14px;
 }
 
-.add-vocabulary-section {
-  display: flex;
-  gap: 10px;
-  padding: 10px 0;
-}
-
-.vocabulary-input {
-  flex: 1;
-}
-
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -394,6 +471,19 @@ export default {
 .select-text{
     display: none;
 }
+
+.word-dialog-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.word-dialog-content h3 {
+  font-size: 40px;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+
 
 @media (max-width: 1000px) {
   .article-list-card{

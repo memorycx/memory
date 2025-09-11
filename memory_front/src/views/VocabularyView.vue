@@ -178,9 +178,16 @@ export default {
   },
   methods: {
     async pass(id,state) {
-      await setKnow({wordId:id,state:state});
+      if(this.totalMax == this.currentIndex){
+        await setKnow({wordId:id,state:state});
+        const learned = await getNumTodayAlready();
+        if(learned != null) {
+          this.learnedToday = learned.learnNum;
+          this.reviewToday = learned.reviewNum;
+        }
+        this.totalMax++;
+      }
       this.currentIndex++;
-      this.totalMax++;
     },
     async restartLearning() {
       this.vocabularyList = await getContinueLearn()

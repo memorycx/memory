@@ -59,4 +59,10 @@ public interface WordMapper {
     // 更新单词状态
     @Update("UPDATE user_word_state SET state = 6,update_time = now() WHERE username = #{username} and word_id = #{wordId};")
     void updateWordStatus(Integer wordId, String username);
+
+
+    // 查询单词
+    @Select("SELECT * FROM all_word WHERE word = #{word}")
+    Word queryWord(String word);
+
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div :class="['app-container', `route-${$route.path.replace('/', '')}`]">
     <!-- 非登录/注册页面显示导航栏 -->
     <header class="app-header" v-if="!isAuthPage">
       <div class="header-content">
@@ -29,20 +29,6 @@
             <span>登录</span>
           </router-link>
         </nav>
-        <!-- <div class="user-info">
-          <el-dropdown>
-            <span class="el-dropdown-link">
-              <i class="fas fa-user-circle"></i>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item>个人中心</el-dropdown-item>
-                <el-dropdown-item>设置</el-dropdown-item>
-                <el-dropdown-item divided>退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div> -->
       </div>
     </header>
     
@@ -177,6 +163,11 @@ body {
   padding: 0;
   width: 70%;
   margin: 0 auto;
+}
+
+/* 阅读界面的宽度重置 */
+.route-reading .app-main {
+  width: 80%;
 }
 
 /* 认证页面特殊样式 */

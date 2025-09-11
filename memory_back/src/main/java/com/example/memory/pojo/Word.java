@@ -17,6 +17,7 @@ public class Word {
     private LocalDate updateTime;
     private Integer wordId;
 
+
     public String toString()
     {
         return "wordId:" + wordId;
