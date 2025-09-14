@@ -20,11 +20,15 @@
             <i class="fas fa-newspaper"></i>
             <span>文章阅读</span>
           </router-link>
-          <router-link to="/speaking" class="nav-item" :class="{ active: $route.path === '/speaking' }">
+          <router-link to="/speaking" class="nav-item disabled" :class="{ active: $route.path === '/speaking' }" v-on:click.native.prevent>
             <i class="fas fa-microphone"></i>
             <span>口语训练</span>
           </router-link>
-          <router-link to="/login" class="nav-item" :class="{ active: $route.path === '/login' }">
+          <div v-if="isLoggedIn" class="nav-item" @click="showLogoutDialog">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>退出</span>
+          </div>
+          <router-link v-else to="/login" class="nav-item" :class="{ active: $route.path === '/login' }">
             <i class="fas fa-sign-in-alt"></i>
             <span>登录</span>
           </router-link>
@@ -44,14 +48,51 @@
       </div>
     </footer>
   </div>
+  
+  <!-- 退出登录确认弹窗 -->
+  <el-dialog
+    title="确认退出"
+    v-model="logoutDialogVisible"
+    width="30%"
+    class="logout-dialog"
+    align-center
+    center
+  >
+
+      <el-button @click="logoutDialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="confirmLogout">确定</el-button>
+
+
+  </el-dialog>
 </template>
 
 <script>
+import { checkLogin, logout } from './utils/store'
+import { ElMessage } from 'element-plus';
 export default {
   name: 'App',
+  data() {
+    return {
+      logoutDialogVisible: false
+    }
+  },
   computed: {
     isAuthPage() {
       return ['/login', '/register'].includes(this.$route.path)
+    },
+    isLoggedIn() {
+      return checkLogin()
+    }
+  },
+  methods: {
+    showLogoutDialog() {
+      this.logoutDialogVisible = true
+    },
+    confirmLogout() {
+      logout()
+      this.logoutDialogVisible = false
+      ElMessage.success('已成功退出登录')
+      this.$router.push('/login')
     }
   }
 }
@@ -73,6 +114,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f5f7fa;
 }
+
+
 
 /* 应用容器 */
 .app-container {
@@ -138,6 +181,13 @@ body {
   background-color: var(--primary-light);
   color: var(--primary-color);
   font-weight: 500;
+}
+
+/* 不可点击的导航项样式 */
+.nav-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .nav-item i {

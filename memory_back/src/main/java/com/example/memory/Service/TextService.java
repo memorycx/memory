@@ -2,6 +2,8 @@ package com.example.memory.Service;
 
 
 import com.example.memory.mapper.TextMapper;
+import com.example.memory.mapper.UserMapper;
+import com.example.memory.mapper.WordMapper;
 import com.example.memory.pojo.Text;
 import com.example.memory.pojo.Word;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,9 @@ public class TextService {
 
     @Autowired
     TextMapper textMapper;
+
+    @Autowired
+    UserMapper userMapper;
     /*
     这里需要做两步
     1. 手动获取文章的summary
@@ -66,5 +71,14 @@ public class TextService {
         return textMapper.getUnknownWord(username,textId);
     }
 
-
+    /*
+    完成阅读
+    1. 添加阅读记录
+    2. 更新用户信息（阅读数）
+     */
+    public void finishRead(String username, Integer id) {
+        textMapper.finishRead(username,id);
+        userMapper.updateReadNum(username);
+        userMapper.updateReadToday(username);
+    }
 }

@@ -47,3 +47,45 @@ def insert_word(a):
         raise
     finally:
         if connection: connection.close()
+
+
+def save_word_to_db(all_word_data):
+    # 插入一页的单词
+    conn, cursor = get_db_connection()
+    try:
+        for word_data in all_word_data:
+            # 1. 插入单词
+            sql_word = """
+            INSERT INTO Oxford_english_dictionary (word, part_of_speech)
+            VALUES (%s, %s)
+            """
+            cursor.execute(sql_word, (word_data["word"], word_data["part_of_speech"]))
+            word_id = cursor.lastrowid
+
+            # 2. 插入义项
+            for sense in word_data.get("senses", []):
+                sql_sense = """
+                INSERT INTO Oxford_meaning (word_id, definition_en, definition_cn)
+                VALUES (%s, %s, %s)
+                """
+                cursor.execute(sql_sense, (word_id, sense.get("definition_en", ""), sense.get("definition_cn", "")))
+                sense_id = cursor.lastrowid
+
+                # 3. 插入例句
+                for ex in sense.get("examples", []):
+                    sql_example = """
+                    INSERT INTO Oxford_example (sense_id, example)
+                    VALUES (%s, %s)
+                    """
+                    cursor.execute(sql_example, (sense_id, ex))
+
+        conn.commit()
+        print(f"插入成功: ")
+
+    except Exception as e:
+        conn.rollback()
+        print(f" 出错: {e}")
+
+    finally:
+        cursor.close()
+        conn.close()

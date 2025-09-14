@@ -29,7 +29,7 @@
             aw.word_id,
             aw.word,
             aw.meaning,
-            uws.state,
+            uws.state,id
             uws.update_time
         from all_word aw
                  inner join user_word_state uws
@@ -37,5 +37,13 @@
         where uws.username = #{username}
         order by uws.update_time;  -- 按更新时间排序
 
+    </select>
+
+    <select id="queryWord" resultType="com.example.memory.pojo.Word">
+        select *
+        from oxford_english_dictionary w
+        inner join oxford_meaning m on w.id = m.word_id
+
+        where w.word = #{word};
     </select>
 </mapper>

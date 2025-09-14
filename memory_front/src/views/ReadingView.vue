@@ -11,7 +11,10 @@
           v-for="article in articles" 
           :key="article.id"
           class="article-item" 
-          :class="{ 'active': selectedArticleId === article.id }"
+          :class="{ 
+            'active': selectedArticleId === article.id, 
+            'read': readArticles.includes(article.id) 
+          }"
           @click="selectArticle(article.id)"
         >
           <h3>{{ article.title }}</h3>
@@ -31,10 +34,10 @@
             <span>{{ selectedArticle?.title || '请选择一篇文章开始阅读' }}</span>
               <el-select class="select-text" v-model="value" placeholder="Select" style="width: 240px">
               <el-option
-                v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+                v-for="item in articles"
+                :key="item.id"
+                :label="item.title"
+                :value="item.title"
               />
             </el-select>
           </div>
@@ -62,6 +65,7 @@
                 <template v-else>{{ "&hairsp;" }}</template>
               </template>
             </p>
+            <el-button type="primary" @click="finishRead()">完成阅读</el-button>
           </div>
         </div>
         <div v-else class="no-article">
@@ -118,11 +122,13 @@
 
 
 <script>
-import { getArticleList , queryWord,addUnknownWord ,getUnknownWords, deleteUnknownWord} from '../api/text'
+import { ca } from 'element-plus/es/locales.mjs'
+import { finishReading,getArticleList , queryWord,addUnknownWord ,getUnknownWords, deleteUnknownWord} from '../api/text'
 export default {
   name: 'ReadingView',
   data() {
     return {
+      readArticles: [1], // 存储已阅读文章的ID
       articles: [
         {
           id: 1,
@@ -175,6 +181,7 @@ export default {
       clickedWord: '',
       temMean:'v. 放弃；抛弃，遗弃',
       temId: -1,
+      value: ''
     }
   },
   created() {
@@ -186,6 +193,17 @@ export default {
     }
   },
   methods: {
+    async finishRead() {
+      try {
+        await finishReading(this.selectedArticleId)
+        // 将已阅读文章ID添加到数组中
+        if (!this.readArticles.includes(this.selectedArticleId)) {
+          this.readArticles.push(this.selectedArticleId)
+        }
+      } catch (error) { 
+        console.error('Failed to finish reading:', error)
+      }
+    },
     async init(){
       try {
         const articles = await getArticleList()
@@ -223,10 +241,14 @@ export default {
     async handleWordClick(word) {
       if (word && word.trim()) {
         this.clickedWord = word.trim()
-        const result = await queryWord(word.trim())
-        this.temMean = result.meaning || ''
-        this.temId = result.wordId || -1
-        this.wordDialogVisible = true
+        try{
+          const result = await queryWord(word.trim())
+          this.temMean = result.meaning || ''
+          this.temId = result.wordId || -1
+          this.wordDialogVisible = true
+        }catch(error){
+          console.error('Failed to query word:', error)
+        }
       }
     },
     // 新增：处理弹窗关闭
@@ -235,7 +257,7 @@ export default {
     },
     async addWord(){
       await addUnknownWord(this.temId,this.selectedArticleId);
-      this.vocabularyNotes.push({word: this.clickedWord, meaning: this.temMean});
+      this.vocabularyNotes.push({wordId:this.temId,word: this.clickedWord, meaning: this.temMean});
       this.wordDialogVisible = false
     },
 
@@ -278,6 +300,7 @@ export default {
 
 .article-list {
   flex: 1;
+  max-height: calc(100vh - 200px); /* 设置最大高度，减去其他元素的高度 */
   overflow-y: auto;
   padding-right: 10px;
 }
@@ -299,6 +322,16 @@ export default {
 .article-item.active {
   background-color: var(--primary-light);
   border-color: var(--primary-color);
+}
+
+/* 已阅读文章样式弱化效果 */
+.article-item.read {
+  opacity: 0.7;
+  border-color: #d9d9d9;
+}
+
+.article-item.read h3 {
+  color: #999;
 }
 
 .article-item h3 {
@@ -485,12 +518,42 @@ export default {
 
 
 
+/* 隐藏滚动条但保持滚动功能 */
+/* WebKit浏览器(Chrome, Safari等) */
+.article-list::-webkit-scrollbar,
+.article-endContent-card::-webkit-scrollbar,
+.vocabulary-list::-webkit-scrollbar {
+  display: none;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Firefox浏览器 */
+.article-list,
+.article-endContent-card,
+.vocabulary-list {
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+}
+
+/* 确保内容可以正常滚动 */
+.article-list,
+.article-endContent-card,
+.vocabulary-list {
+  overflow-y: auto;
+}
+
 @media (max-width: 1000px) {
   .article-list-card{
     display: none;
   }
   .select-text{
      display: block;
+  }
+  .article-list {
+    max-height: calc(100vh - 150px);
   }
 }
 </style>

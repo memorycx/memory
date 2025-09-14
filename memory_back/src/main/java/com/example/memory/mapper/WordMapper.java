@@ -62,7 +62,7 @@ public interface WordMapper {
 
 
     // 查询单词
-    @Select("SELECT * FROM all_word WHERE word = #{word}")
+
     Word queryWord(String word);
 
 }

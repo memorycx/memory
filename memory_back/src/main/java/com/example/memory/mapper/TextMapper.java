@@ -25,8 +25,14 @@ public interface TextMapper {
     @Select("SELECT COUNT(*) FROM user_text_word WHERE username = #{username} AND word_id = #{wordId} AND text_id = #{textId};")
     int countUnknownWord(String username, Integer wordId, Integer textId);
 
+    // 获得陌生单词
     List<Word> getUnknownWord(String username, Integer textId);
 
+    // 删除陌生单词
     @Delete("DELETE FROM user_text_word WHERE username = #{username} AND word_id = #{wordId} AND text_id = #{textId};")
     int deleteUnknownWord(String username, Integer wordId, Integer textId);
+
+    // 标记文章为已读
+    @Insert("INSERT INTO user_text_status (username, text_id,status) VALUES (#{username}, #{id},1);")
+    void finishRead(String username, Integer id);
 }

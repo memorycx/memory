@@ -71,4 +71,16 @@ public class TextController {
         return Result.success(unknownWord);
     }
 
+    /*
+    完成阅读
+    1. 添加阅读记录
+    2. 更新用户信息（阅读数）
+     */
+    @GetMapping("/api/article/finishReading")
+    public Result finishRead(HttpServletRequest request, @RequestParam Integer id) {
+        String username = request.getAttribute("username").toString();
+        textService.finishRead(username,id);
+        return Result.success();
+    }
+
 }

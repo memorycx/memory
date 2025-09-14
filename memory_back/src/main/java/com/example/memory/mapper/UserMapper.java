@@ -69,9 +69,17 @@ public interface UserMapper {
 
     void updateReviewToday(String username);
 
+    void updateReadToday(String username);
+
     @Update("update users set word_nums = word_nums + 1 where username = #{username}")
     void updateWordNums(String username);
 
+    @Update("update users set text_nums = text_nums + 1 where username = #{username}")
+    void updateReadNum(String username);
+
     @Update("update users set gender = #{user.gender},address = #{user.address},school = #{user.school},new_learn_plane = #{user.newLearnPlane} where username = #{username}")
     void updateUser(User user, String username);
+
+
+
 }

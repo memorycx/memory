@@ -35,4 +35,21 @@
             review = review + 1  -- 累计 review（原值 + 本次值）
 
     </insert>
+    <insert id="updateReadToday">
+        INSERT INTO user_day_num (username, date, new_learn, review, `read`, speek)
+        VALUES (
+                   #{username},        -- 用户名（从业务参数获取）
+                   now(),        -- 今日日期（MySQL 内置函数，自动获取当前日期）
+                   0,                -- 本次新增的 new_learn 值（如本次新学 5 个单词）
+                   0,                -- 本次新增的 review 值（如本次复习 3 个单词）
+                   1,                -- 本次新增的 read 值
+                   0                 -- 本次新增的 speek 值
+               )
+-- 核心：若唯一索引（username + date）冲突（即今日已有记录），则执行更新
+        ON DUPLICATE KEY UPDATE
+            `read` = `read` + 1  -- 累计 read（原值 + 本次值）
+
+    </insert>
+
+
 </mapper>
