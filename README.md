@@ -7,10 +7,7 @@
 ![输入图片说明](read/static/text_big_2.png)
 
 **小屏幕适配**
-![输入图片说明](read/static/home_small.png)
-![输入图片说明](read/static/word_small.png)
-![输入图片说明](read/static/text_small.png)
-
+![输入图片说明](read/static/small.png)
 
 
 以上是该产品的页面的展示
