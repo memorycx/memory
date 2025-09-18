@@ -1,144 +1,152 @@
+import json
 import os
 import re
-
-import chardet
+import sys
 import tool
-
-#
-#
-def parse_file(text):
-    entries = []
-    # 匹配模式：单词 + 释义
-    pattern = re.compile(r"^([a-zA-Z\-]+)\s*\n?(/[^/]+/)?\s*(.*)", re.MULTILINE)
-
-    for match in pattern.finditer(text):
-        word = match.group(1).strip()
-        # pronunciation = match.group(2).strip() if match.group(2) else ""
-        meaning = match.group(3).strip()
-        entries.append({"word": word, "meaning": meaning})
-
-    return entries
+import chardet
+import db
 
 
-def parse_meaning_text(text):
-    result = {
-        "part_of_speech": "",
-        "senses": []
-    }
-
-    if not text or text.strip() == "":
-        return result
-
-    # 提取词性（开头的 v, n, adj 等）
-    pos_match = re.match(r"^([a-zA-Z\-\.]+)", text.strip())
-    if pos_match:
-        result["part_of_speech"] = pos_match.group(1)
-
-    # 去掉开头的词性部分
-    text = re.sub(r"^[a-zA-Z\-\.]+\s*", "", text.strip())
-
-    # 按照义项编号拆分  (1, 2, 3, 或 1 (a), 1 (b))
-    senses = re.split(r"\s(?=\d+\s|\d+\s*\([a-z]\))", text)
-
-    for s in senses:
-        s = s.strip()
-        if not s:
-            continue
-
-        # 提取编号 (原本的编号暂时忽略)
-        s = re.sub(r"^\d+\s*(\([a-z]\))?", "", s).strip()
-
-        # 中英文拆分：第一个中文字符作为分界点
-        # zh_split = re.split(r"([一-龥].*)", s, maxsplit=1)
-        # if len(zh_split) > 1:
-        #     definition_en = zh_split[0].strip(" :")
-        #     rest_cn = zh_split[1]
-        # else:
-        #     definition_en = s
-        #     rest_cn = ""
-
-        # 先匹配所有 [] 内的内容，暂时替换成占位符
-        placeholders = []
-
-        def replace_brackets(match):
-            placeholders.append(match.group(0))
-            return f"__PLACEHOLDER_{len(placeholders) - 1}__"
-
-        s_temp = re.sub(r"\[.*?\]", replace_brackets, s)
-
-        # 找到第一个中文字符作为分界
-        match = re.search(r"[一-龥]", s_temp)
-        if match:
-            idx = match.start()
-            definition_en = s_temp[:idx].strip(" :")
-            rest_cn = s_temp[idx:].strip()
-        else:
-            definition_en = s.strip()
-            rest_cn = ""
-
-        # 把占位符替换回原来的 [] 内容
-        for i, ph in enumerate(placeholders):
-            definition_en = definition_en.replace(f"__PLACEHOLDER_{i}__", ph)
-            rest_cn = rest_cn.replace(f"__PLACEHOLDER_{i}__", ph)
-
-        # 中文部分再拆成 “释义 + 例句”
-        if ":" in rest_cn:
-            parts = rest_cn.split(":", 1)
-            definition_cn = parts[0].strip()
-            examples = parts[1].strip()
-        else:
-            definition_cn = rest_cn.strip()
-            examples = ""
-
-        # 例句按 * 拆分
-        example_list = [e.strip() for e in examples.split("*") if e.strip()]
-
-        result["senses"].append({
-            "id": "",  # 先空着，后面统一编号
-            "definition_en": definition_en,
-            "definition_cn": definition_cn,
-            "examples": example_list
-        })
-
-    # 自动给 senses 编号，从 1 开始
-    for idx, sense in enumerate(result["senses"], 1):
-        sense["id"] = str(idx)
-
-    return result
-
-
-def parse_meaning(entries):
+def parse_definitions_improved(definitions_str):
     """
-    解析整个词典 entries (list of dict)，返回结构化结果
+    进一步改进的函数，用于解析释义字符串。
+    它将数字前的部分作为单独的第一个元素，并正确解析后续的带编号释义。
     """
-    parsed_entries = []
+    # 查找第一个数字及其后面的文本，将其余部分作为前缀
+    match = re.search(r'(\s\d+[\s\S]*)', definitions_str)
 
-    for entry in entries:
-        word = entry.get("word", "").strip()
-        meaning = entry.get("meaning", "").strip()
+    if match:
+        prefix = definitions_str[:match.start()].strip()
+        numbered_part = definitions_str[match.start():].strip()
 
-        meaning_parsed = parse_meaning_text(meaning)
+        # 使用先行断言(?=...)来分割，但同时保留数字，这是实现的关键
+        parts = re.split(r'(?=\s\d+\s)', numbered_part)
 
-        parsed_entries.append({
-            "word": word,
-            "part_of_speech": meaning_parsed["part_of_speech"],
-            "senses": meaning_parsed["senses"]
+        # 将分割后的结果列表化，并确保没有空字符串
+        parsed_list = [p.strip() for p in parts if p.strip()]
+
+        # 将前缀添加到列表的开头
+        if prefix:
+            parsed_list.insert(0, prefix)
+
+        return parsed_list
+    else:
+        # 如果没有找到带编号的释义，则返回整个字符串作为一个元素
+        return [definitions_str.strip()]
+
+
+def parse_example(senses_data):
+    # 初始化一个空列表，用于存储最终解析结果
+    parsed_senses = []
+
+    # 假设列表的第一个元素是词性（如 "v"）
+
+    if senses_data and senses_data[0].strip():  # 先判断是否有有效内容
+        parts = senses_data[0].split()
+        if parts:  # 再判断分割后的列表是否非空
+            main_sense = parts[0]
+        else:
+            return parsed_senses
+    else:
+        return parsed_senses
+    # 初始化一个列表，用于存储所有具体的定义
+    definitions_list = []
+
+    # 遍历 senses_data 中从第二个元素开始的所有定义字符串
+    for definition_str in senses_data[1:]:
+        # 使用 re.split() 以第一个冒号 ":" 作为分隔符，将字符串分割成两部分：
+        # parts[0] 是定义文本，parts[1] 是例子文本
+        # maxsplit=1 确保只分割一次
+        parts = re.split(r':\s*', definition_str, maxsplit=1)
+
+        # 检查是否成功分割出定义和例子
+        if len(parts) == 2:
+            definition_text = parts[0]
+            examples_str = parts[1]
+
+            # 使用正则表达式匹配并提取定义类型，如 "[Tn, Tn.p]" 或 "(phr v)"
+            # ^(\[.*?\]|\(.*\)) 匹配行首的 "[...]" 或 "(...)"
+            type_match = re.search(r'^(\[.*?\]|\(.*\))', definition_text)
+            # 如果匹配成功，获取匹配到的字符串；否则，设置为空
+            definition_type = type_match.group(1) if type_match else main_sense
+
+            # 从定义文本中移除类型部分，并去除首尾空格
+            text_without_type = definition_text.replace(definition_type, "", 1).strip()
+
+            # 以星号 "*" 分割例子字符串，并去除每个例子首尾的空格
+            # 使用列表推导式过滤掉可能出现的空字符串
+            examples = [ex.strip() for ex in examples_str.split('*') if ex.strip()]
+
+            definitions_list.append({
+                "type": definition_type,
+                "mean": text_without_type,
+                "examples": examples
+            })
+        else:
+            # 如果字符串中没有冒号，则视为没有例子的情况
+            # 将整个字符串作为文本，例子列表为空
+            definitions_list.append({
+                "type": main_sense,
+                "mean": definition_str.strip(),
+                "examples": []
+            })
+    if not definitions_list:
+        definitions_list.append({
+            "type": main_sense,
+            "mean": ' '.join(senses_data[0].split()[1:]),
+            "examples": []
         })
+    # 将主词性 ("v") 和所有定义列表组合成一个最终的字典
+    # parsed_senses.append({
+    #     "type": main_sense,
+    #     "definitions": definitions_list
+    # })
 
-    return parsed_entries
+    return definitions_list
 
 
-def read_file(text, enc):
-    # 解析文件，获得一个数组
-    data = parse_file(text)
-    end = parse_meaning(data)
-    tool.save_word_to_db(end)
+def parse_file(file_content, enc):
+    lines = file_content.strip().split('\n')
+    parsed_words = []
+
+    # Process the file in pairs of lines
+    sys.stdout.reconfigure(encoding=enc)
+    for i in range(0, len(lines), 2):
+        if i + 1 < len(lines):
+            english_word = lines[i].strip()
+            word = tool.parse_word(english_word)
+
+
+
+            details = lines[i + 1].strip()
+            details = re.sub(r'/.+?/', '', details)
+            senses = parse_definitions_improved(details)
+            definitions_list = parse_example(senses)
+
+            if word['after_parentheses']:
+                english_word = word['before_parentheses']
+                parentheses_content = word['parentheses_content']
+                after_parentheses = word['after_parentheses']
+                if parentheses_content or after_parentheses:
+                    definitions_list.append({
+                        "type": "",
+                        "mean": parentheses_content,
+                        "examples": [after_parentheses]
+                    })
+
+
+
+            parsed_words.append({
+                "word": english_word,
+                "definitions_list": definitions_list
+            })
+    db.save_word_to_db(parsed_words)
+    #print(json.dumps(parsed_words, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
 
     base_dir = "DICT"  # 词典的根目录
-
     for root, dirs, files in os.walk(base_dir):
         for file in files:
             if file.endswith(".txt"):  # 只处理 txt 文件
@@ -147,8 +155,15 @@ if __name__ == "__main__":
                 with open(file_path, "rb") as f:
                     raw = f.read(20000)
                 enc = chardet.detect(raw)["encoding"] or "utf-8"
-                print(f"{file} 检测编码: {enc}")
+                # print(file + "检测编码: " + enc)
 
                 with open(file_path, "r", encoding=enc, errors="ignore") as f:
-                    content = f.read()
-                    read_file(content, enc)
+                    parse_file(f.read(), enc)
+
+    # with open("./DICT/A/A-b.txt", "rb") as f:
+    #     raw = f.read(20000)
+    # enc = chardet.detect(raw)["encoding"] or "utf-8"
+    # # print(f"{file} 检测编码: {enc}")
+    #
+    # with open("./DICT/A/A-b.txt", "r", encoding=enc, errors="ignore") as f:
+    #     parse_file(f.read(), enc)

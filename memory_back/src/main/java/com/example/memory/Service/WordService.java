@@ -138,11 +138,5 @@ public class WordService {
         userMapper.updateWordNums(username);
     }
 
-    public Word queryWord(String word) {
-        // 1.先在 oxford 中查询单词，拿到单词的id 和 part_of_speech  --> 封装到Word 中
-        // 2.根据id 去 oxford_meaning 中查询单词的meaning,拿到 mean_id --> 封装到Senses 中
-        // 3.根据mean_id 去 oxford_example ---> 封装到List<String> examples
-        return wordMapper.queryWord(word);
-    }
 
 }

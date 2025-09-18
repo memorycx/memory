@@ -17,7 +17,7 @@
 **如果没有 {token} ，后端就返回错误信息，前端展示默认信息**
 **如果没有 {token} ，result中的message携带"用户没登录"**
 
-*没做*
+*没做*  ---> 已完成
 `登录和注册在主页显示`
 
 - 获取绝大多少信息 api/user/info GET  {token}       
@@ -34,6 +34,7 @@
         wordNums: 1500,
         speekNums: 21,
       },
+- 更新用户信息 api/user/updateInfo  POST  {token,gender, address, school, newLearnPlane, currentBookId} 
 - 获取当前书籍的单词  api/user/wordNumber GET  {token}  返回示例：(int)10 
 - 获取学习列表 api/user/tableData GET  {token}  
     返回示例：[
@@ -141,6 +142,68 @@
 
 
 - 用户将单词设置为已掌握 /api/word/setKnow GET  {token,wordId}  
+
+
+
+# 文章的接口
+
+- 获取文章列表 /api/article/getArticleList GET  {token}  
+    返回示例：[
+      {
+        id: 1,
+        title: 'How to Improve Your English Reading Skills',
+        summary: 'Learn effective strategies to enhance your English reading comprehension and speed.',
+        source: 'English Learning Magazine',
+        date: '2024-08-15',
+        nums: 850,
+        content: [
+          { index: 1, text: 'Improving your English reading skills is essential for academic and professional success. Whether you are a student preparing for exams or a professional looking to advance your career, strong reading skills can open up new opportunities.' },
+          { index: 2, text: 'One effective strategy is to start with materials that match your current level. If you are a beginner, try children\'s books or simple news articles. As you progress, gradually move to more complex texts. This approach helps build confidence and vocabulary.' },
+          { index: 3, text: 'Another important technique is active reading. Instead of passively scanning the text, engage with it by asking questions, making predictions, and summarizing key points. This not only improves comprehension but also retention of information.' },
+          { index: 4, text: 'Vocabulary building is also crucial. Keep a notebook or use a digital tool to record new words you encounter. Review these words regularly to reinforce your memory. Over time, you will notice a significant improvement in your reading fluency.' },
+          { index: 5, text: 'Finally, practice regularly. Set aside dedicated time each day for reading. Consistency is key to developing any skill, and reading is no exception. With patience and persistence, you will see remarkable progress in your English reading abilities.' }
+        ]
+      },
+      {
+        id: 2,
+        title: 'The Benefits of Reading Daily',
+        summary: 'Discover how daily reading can enhance your cognitive abilities, vocabulary, and overall knowledge.',
+        source: 'Health & Wellness Journal',
+        date: '2024-08-10',
+        nums: 620,
+        content: [
+          { index: 1, text: 'In today\'s digital age, many people spend more time scrolling through social media than reading books. However, maintaining a daily reading habit offers numerous benefits that cannot be replicated by other activities.' },
+          { index: 2, text: 'Research has shown that regular reading can improve cognitive function and memory. It stimulates the brain, keeping it active and engaged. This mental exercise can even help prevent age-related cognitive decline, such as Alzheimer\'s disease.' },
+          { index: 3, text: 'Reading also expands your vocabulary and improves language skills. Exposure to new words in context helps with retention and application. This is particularly beneficial for language learners who want to achieve fluency.' },
+          { index: 4, text: 'Moreover, reading can reduce stress and promote relaxation. Getting lost in a good book can transport you to different worlds, providing a much-needed escape from daily pressures. It can also improve sleep quality when done before bed, unlike screen time which can disrupt sleep patterns.' }
+        ]
+      },
+      {
+        id: 3,
+        title: 'The Importance of Lifelong Learning',
+        summary: 'Explore why continuous education is vital in today\'s rapidly changing world.',
+        source: 'Education Today',
+        date: '2024-08-05',
+        nums: 780,
+        content: [
+          { index: 1, text: 'In the past, education was often viewed as a phase that ended when one entered the workforce. However, in today\'s fast-paced world, lifelong learning has become a necessity. Technologies evolve, industries transform, and new knowledge emerges at an unprecedented rate.' },
+          { index: 2, text: 'Lifelong learning refers to the ongoing, voluntary pursuit of knowledge for personal or professional reasons. It can take many forms, from formal education to self-study, online courses, workshops, and more. The key is to maintain a curious mindset and a willingness to adapt.' },
+          { index: 3, text: 'One of the main benefits of lifelong learning is professional development. In competitive job markets, individuals who continuously update their skills are more likely to secure promotions and stay relevant in their fields. Employers value employees who show initiative and a commitment to growth.' },
+          { index: 4, text: 'Lifelong learning also has personal benefits. It keeps the mind active, enhances self-esteem, and provides a sense of accomplishment. It can open up new hobbies, interests, and social connections. Ultimately, it contributes to a more fulfilling and meaningful life.' }
+        ]
+      }
+    ]
+
+- 查询单词 /api/word/queryWord GET  {token,word}  返回示例：{id:1,word:'abandon',meaning:'v. 放弃；抛弃，遗弃'}
+
+- 添加到本文的陌生词汇 /api/word/addUnknownWord Get  {token,wordId,textId}  
+
+- 删除该文本的陌生词汇 /api/word/deleteUnknownWord  Get  {token,wordId,textId}
   
+- 获取该文章的陌生词汇 /api/word/getUnknownWords GET  {token,articleId}  返回示例：[{id:1,word:'abandon',textId:1},{id:2,word:'ability',textId:1}]
+
+
+
+- 文章完成阅读 /api/article/finishReading GET  {token,articleId}  返回示例：[{id:1,word:'abandon',meaning:'v. 放弃；抛弃，遗弃'},{id:2,word:'ability',meaning:'n. 能力，才能'}]
 
 

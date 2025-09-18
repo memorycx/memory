@@ -47,25 +47,21 @@ public class TextService {
     2. 如果有，直接返回并提示已存在
     3. 如果没有，新增
      */
-    public int addUnknownWord(String username, Integer wordId, Integer textId) {
-        int count = textMapper.countUnknownWord(username,wordId,textId);
+    public int addUnknownWord(String username, String word, Integer textId) {
+        int count = textMapper.countUnknownWord(username,word,textId);
         if(count > 0) {
             return 0;
         }
-        textMapper.addUnknownWord(username,wordId,textId);
+        textMapper.addUnknownWord(username,word,textId);
         return 1;
     }
 
-    public int deleteUnknownWord(String username, Integer wordId, Integer textId) {
-        return textMapper.deleteUnknownWord(username,wordId,textId);
+    public int deleteUnknownWord(String username, String word, Integer textId) {
+        return textMapper.deleteUnknownWord(username,word,textId);
     }
 
     /*
     获得陌生单词
-    1.先去user_text_word表中 拿到 id 和 word_id
-    2. 再去all_word表中 拿到 word 和 meaning
-    3. 合并
-     ----> 解决方案（使用关联查询）
      */
     public List<Word> getUnknownWord(String username, Integer textId) {
         return textMapper.getUnknownWord(username,textId);
@@ -80,5 +76,9 @@ public class TextService {
         textMapper.finishRead(username,id);
         userMapper.updateReadNum(username);
         userMapper.updateReadToday(username);
+    }
+
+    public List<Integer> getFinishReading(String username) {
+        return textMapper.getFinishReading(username);
     }
 }

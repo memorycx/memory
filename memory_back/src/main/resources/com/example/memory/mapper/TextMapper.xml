@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.memory.mapper.TextMapper">
-    <select id="getUnknownWord" resultType="com.example.memory.pojo.Word">
-        select all_word.word,all_word.meaning,all_word.word_id from user_text_word
-        left join all_word on user_text_word.word_id = all_word.word_id
-        where user_text_word.username = #{username} and user_text_word.text_id = #{textId}
-    </select>
+<!--    <select id="getUnknownWord" resultType="com.example.memory.pojo.Word">-->
+<!--        select all_word.word,all_word.meaning,all_word.word_id from user_text_word-->
+<!--        left join all_word on user_text_word.word_id = all_word.word_id-->
+<!--        where user_text_word.username = #{username} and user_text_word.text_id = #{textId}-->
+<!--    </select>-->
 </mapper>

@@ -89,7 +89,7 @@ if __name__ == "__main__":
     # 替换为你的PDF文件路径
 
     target = []
-    pdf_file_path = "static\\CET4.pdf"
+    pdf_file_path = "../static/CET4.pdf"
     pdf_text = read_pdf_text(pdf_file_path, target)
     print(len(target))
     tool.insert_word(target)

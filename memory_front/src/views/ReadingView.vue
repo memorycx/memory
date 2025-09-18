@@ -85,8 +85,8 @@
         <div v-if="vocabularyNotes.length > 0" class="vocabulary-list">
           <div v-for="note in vocabularyNotes" :key="note.wordId" class="vocabulary-item">
             <div class="vocabulary-word">{{ note.word }}</div>
-            <div class="vocabulary-meaning">{{ note.meaning }}</div>
-            <el-button type="text" @click="removeVocabularyNote(note.wordId)" size="small">
+            <!-- <div class="vocabulary-meaning">{{ note.meaning }}</div> -->
+            <el-button type="text" @click="removeVocabularyNote(note.word)" size="small">
               <i class="fas fa-times"></i>
             </el-button>
           </div>
@@ -98,37 +98,92 @@
       </el-card>
     </div>
 
-    <!-- 单词点击弹窗 -->
-    <el-dialog
-      title="单词释义"
-      v-model="wordDialogVisible"
-      width="30%"
-      :before-close="handleDialogClose"
-      align-center
-    >
-      <div class="word-dialog-content">
-        <h3>{{ clickedWord }}</h3>
-      </div>
-      <div class="meaning-hint">
-        {{ temMean }}
-      </div>
-
-      <div class="dia-button">
-        <el-button type="primary" @click="addWord()">添加为陌生词汇</el-button>
-      </div>  
-    </el-dialog>
+  
   </div>
+  
+  <!-- 单词详情弹窗 -->
+  <el-dialog
+    v-model="wordDialogVisible"
+    title="单词详情"
+    width="40%"
+    :before-close="handleDialogClose"
+  >
+    <div class="word-dialog-content">
+      <h3>{{ clickedWord }}</h3>
+
+      <!-- 单词详细信息 -->
+      <div v-if="word_mean" class="word-details">
+        <!-- 展示音标信息 -->
+        <div class="word-phonetic">
+          <span v-if="word_mean.phonetic">{{ word_mean.phonetic }}</span>
+          <button class="pronunciation-btn" @click="playPronunciation">
+            <i class="fas fa-volume-up"></i>
+          </button>
+        </div>
+
+        
+        <!-- 展示单词释义 -->
+        <div class="word-meanings">
+          <div v-for="(meaning, index) in word_mean.meanings" :key="index" class="meaning-item">
+            <!-- 词性 -->
+            <div class="meaning-type">
+              {{ meaning.partOfSpeech }}
+            </div>
+            
+            <!-- 释义内容 -->
+            <div class="meaning-content">
+              <div v-for="(definition, defIndex) in meaning.definitions" :key="defIndex" class="definition-item">
+                <div class="definition-text">
+                  {{ definition.definition }}
+                </div>
+
+                <!-- 例句 -->
+                <div v-if="definition.example" class="example-item">
+                  <span class="example-label">例句:</span>
+                  <span class="example-text">{{ definition.example }}</span>
+                </div>
+                
+                <!-- 同义词 -->
+                <div v-if="definition.synonyms && definition.synonyms.length > 0" class="synonyms-item">
+                  <span class="synonyms-label">同义词:</span>
+                  <span class="synonyms-text">{{ definition.synonyms.join(', ') }}</span>
+                </div>
+                
+                <!-- 反义词 -->
+                <div v-if="definition.antonyms && definition.antonyms.length > 0" class="antonyms-item">
+                  <span class="antonyms-label">反义词:</span>
+                  <span class="antonyms-text">{{ definition.antonyms.join(', ') }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 加载中状态 -->
+      <div v-else class="loading-state">
+        <el-icon><Loading /></el-icon>
+        <span>加载中...</span>
+      </div>
+    </div>
+    
+    <div slot="footer" class="dialog-footer">
+      <el-button @click="handleDialogClose">关闭</el-button>
+      <el-button type="primary" @click="addWord">添加到词汇本</el-button>
+    </div>
+  </el-dialog>
 </template>
 
 
 <script>
 import { ca } from 'element-plus/es/locales.mjs'
-import { finishReading,getArticleList , queryWord,addUnknownWord ,getUnknownWords, deleteUnknownWord} from '../api/text'
+import { Loading } from '@element-plus/icons-vue'
+import { getFinishReading,finishReading,getArticleList , queryWord,addUnknownWord ,getUnknownWords, deleteUnknownWord} from '../api/text'
 export default {
   name: 'ReadingView',
   data() {
     return {
-      readArticles: [1], // 存储已阅读文章的ID
+      meanings: ca.messages, // 语言包
       articles: [
         {
           id: 1,
@@ -175,13 +230,12 @@ export default {
         }
       ],
       selectedArticleId: null,
-      vocabularyNotes: [{wordId:-1,word: 'abandon', meaning: 'v. 放弃；抛弃，遗弃'}],
-      // 新增的用于单词点击功能的属性
+      vocabularyNotes: [], //这是给用户来展示该文章的陌生词汇
       wordDialogVisible: false,
       clickedWord: '',
-      temMean:'v. 放弃；抛弃，遗弃',
-      temId: -1,
-      value: ''
+      value: '',
+      word_mean: null,
+      readArticles: [], // 存储已阅读文章的ID
     }
   },
   created() {
@@ -193,6 +247,13 @@ export default {
     }
   },
   methods: {
+    playPronunciation() {
+      const audio = new Audio()
+      audio.src = `https://api.dictionaryapi.dev/media/pronunciations/en/${this.clickedWord}-us.mp3`
+      audio.play().catch(error => {
+        console.log('无法播放发音:', error)
+      })
+    },
     async finishRead() {
       try {
         await finishReading(this.selectedArticleId)
@@ -207,13 +268,13 @@ export default {
     async init(){
       try {
         const articles = await getArticleList()
+        this.readArticles = await getFinishReading()
         this.articles = articles.map(article => ({
           ...article,
           endContent: this.transformContent(article.endContent || [])
         }))
       } catch (error) {
         console.error('Failed to get article list:', error)
-        // 保持使用本地数据
       }
     },
     transformContent(contentObj) {
@@ -231,6 +292,8 @@ export default {
       this.vocabularyNotes = await getUnknownWords(id)
     },
 
+
+    // 处理文本，使得每个单词可以点击的函数
     splitTextIntoWords(text) {
       if (!text) return []
       // 这个正则表达式会将文本分割成单词、空格和标点符号
@@ -238,38 +301,62 @@ export default {
       return words
     },
     
+    // 处理单词点击的事件
     async handleWordClick(word) {
       if (word && word.trim()) {
         this.clickedWord = word.trim()
+        const lastChar = this.clickedWord.slice(-1);
+        // 如果最后一个字符是.或,则去除
+        if (lastChar === '.' || lastChar === ',') {
+          this.clickedWord = this.clickedWord.slice(0, -1);
+        }
         try{
-          const result = await queryWord(word.trim())
-          this.temMean = result.meaning || ''
-          this.temId = result.wordId || -1
+          this.word_mean = await queryWord(this.clickedWord.trim())
+          this.word_mean = this.word_mean[0]
           this.wordDialogVisible = true
         }catch(error){
           console.error('Failed to query word:', error)
         }
       }
     },
-    // 新增：处理弹窗关闭
+
+    // 处理弹窗关闭
     handleDialogClose() {
       this.wordDialogVisible = false
     },
     async addWord(){
-      await addUnknownWord(this.temId,this.selectedArticleId);
-      this.vocabularyNotes.push({wordId:this.temId,word: this.clickedWord, meaning: this.temMean});
-      this.wordDialogVisible = false
+      try {
+        // 确保我们有单词和释义数据
+        if (this.clickedWord && this.word_mean) {
+          
+          // 添加到词汇本
+          await addUnknownWord(this.clickedWord,this.selectedArticleId);
+          
+          // 更新本地词汇列表
+          this.vocabularyNotes.push({word: this.clickedWord});
+          
+          // 显示成功提示
+          this.$message.success('已添加到词汇本');
+          
+          // 关闭弹窗
+          this.wordDialogVisible = false;
+        }
+      } catch (error) {
+        console.error('添加单词失败:', error);
+        this.$message.error('添加失败，请重试');
+      }
     },
+    
 
-    async removeVocabularyNote(wordId) {
-      this.vocabularyNotes = this.vocabularyNotes.filter(item => item.wordId !== wordId);
-      await deleteUnknownWord(wordId,this.selectedArticleId)
+    async removeVocabularyNote(word) {
+      this.vocabularyNotes = this.vocabularyNotes.filter(item => item.word !== word);
+      await deleteUnknownWord(word,this.selectedArticleId)
     },
     clearVocabularyNotes() {
       if (this.vocabularyNotes.length > 0) {
         if (confirm('确定要清空所有陌生词汇记录吗？')) {
           this.vocabularyNotes.forEach(async (item) => {
-             await deleteUnknownWord(item.wordId,this.selectedArticleId)
+             await deleteUnknownWord(item.word,this.selectedArticleId)
           });
         }
       }
@@ -505,18 +592,139 @@ export default {
     display: none;
 }
 
+
+
+
+
+
+
+/* 单词弹窗样式 */
+
+.pronunciation-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: 10px;
+  transition: color 0.3s;
+}
+
+.pronunciation-btn:hover {
+  color: var(--primary-hover);
+}
 .word-dialog-content {
-  text-align: center;
   padding: 20px 0;
 }
 
 .word-dialog-content h3 {
-  font-size: 40px;
+  font-size: 28px;
   color: var(--primary-color);
-  margin: 0;
+  margin-bottom: 15px;
+  text-align: center;
 }
 
+.word-phonetic {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 20px;
+}
 
+.word-details {
+  text-align: left;
+}
+
+.word-meanings {
+  margin-top: 20px;
+}
+
+.meaning-item {
+  display: flex;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.meaning-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.meaning-type {
+  font-weight: bold;
+  color: #666;
+  margin-right: 15px;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.meaning-content {
+  flex: 1;
+}
+
+.definition-item {
+  margin-bottom: 15px;
+}
+
+.definition-item:last-child {
+  margin-bottom: 0;
+}
+
+.definition-text {
+  margin-bottom: 8px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.example-item,
+.synonyms-item,
+.antonyms-item {
+  margin-left: 20px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.example-label,
+.synonyms-label,
+.antonyms-label {
+  color: #999;
+  margin-right: 5px;
+}
+
+.example-text {
+  color: #666;
+  font-style: italic;
+}
+
+.synonyms-text,
+.antonyms-text {
+  color: #666;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px 0;
+  color: #999;
+}
+
+.loading-state .el-icon {
+  display: block;
+  margin: 0 auto 10px;
+  font-size: 40px;
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* 隐藏滚动条但保持滚动功能 */
 /* WebKit浏览器(Chrome, Safari等) */

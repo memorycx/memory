@@ -27,7 +27,7 @@
               <span>今日需复习: {{ userData.reviewPlane }}</span>
             </div>
             <div class="info-item">
-              <span>背诵书籍: {{ userData.currentBookId }}</span>
+              <span>背诵书籍: {{ bookOptions.find(book => book.id === userData.currentBookId)?.bookName || '未选择' }}</span>
               <el-button type="primary" class="edit-button" @click="openEditDialog">编辑个人资料</el-button>
             </div>
           </div>
@@ -202,8 +202,6 @@ export default {
       bookOptions: [
         { bookName: 'CET4', id: 1 },
         { bookName: 'CET6', id: 2 },
-        { bookName: 'GRE', id: 3 },
-        { bookName: 'TOEFL', id: 4 }
       ]
     }
   },
@@ -235,6 +233,11 @@ export default {
       
       
       await update(this.userData)
+      const userInfo = await info()
+      if (userInfo) {
+        this.userData = userInfo
+      }
+      this.editForm = {}
       
       // 显示成功提示
       this.$message({

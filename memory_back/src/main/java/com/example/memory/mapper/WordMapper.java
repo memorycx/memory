@@ -61,8 +61,6 @@ public interface WordMapper {
     void updateWordStatus(Integer wordId, String username);
 
 
-    // 查询单词
 
-    Word queryWord(String word);
 
 }

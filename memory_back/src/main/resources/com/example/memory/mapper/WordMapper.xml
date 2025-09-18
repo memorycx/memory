@@ -29,7 +29,7 @@
             aw.word_id,
             aw.word,
             aw.meaning,
-            uws.state,id
+            uws.state,
             uws.update_time
         from all_word aw
                  inner join user_word_state uws
@@ -39,11 +39,7 @@
 
     </select>
 
-    <select id="queryWord" resultType="com.example.memory.pojo.Word">
-        select *
-        from oxford_english_dictionary w
-        inner join oxford_meaning m on w.id = m.word_id
 
-        where w.word = #{word};
-    </select>
+
+
 </mapper>

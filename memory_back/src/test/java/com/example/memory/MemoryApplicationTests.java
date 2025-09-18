@@ -2,9 +2,13 @@ package com.example.memory;
 
 import com.example.memory.Service.WordService;
 import com.example.memory.Tool.JwtUtils;
+import com.example.memory.mapper.WordMapper;
 import com.example.memory.pojo.Book;
 import com.example.memory.pojo.Word;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.Test;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -23,22 +27,22 @@ class MemoryApplicationTests {
 //        }
 //    }
 
-    @Autowired
-    WordService wordService;
-    @Test
-    void printWords() {
-        List<Word> words = wordService.getWord(1);
-        for (Word word : words) {
-            System.out.println(word.getWord());
-        }
-    }
-
-    @Test
-    void generateToken(){
-        String token = JwtUtils.generateToken("xxxx");
-        System.out.println(token);
-        System.out.println(JwtUtils.verifyToken(token));
-    }
+//    @Autowired
+//    WordService wordService;
+//    @Test
+//    void printWords() {
+//        List<Word> words = wordService.getWord(1);
+//        for (Word word : words) {
+//            System.out.println(word.getWord());
+//        }
+//    }
+//
+//    @Test
+//    void generateToken(){
+//        String token = JwtUtils.generateToken("xxxx");
+//        System.out.println(token);
+//        System.out.println(JwtUtils.verifyToken(token));
+//    }
 
 //    @Autowired
 //    UserService userService;
@@ -54,5 +58,22 @@ class MemoryApplicationTests {
 //        User user = new User("shazi","123","232");
 //        System.out.println(userService.register(user));
 //    }
-
+//    @Test
+//    void contextLoads() {
+//        @Autowired
+//        SqlSessionTemplate MyBatisUtils;
+//        SqlSessionFactory sqlSessionFactory = MyBatisUtils.getSqlSessionFactory();
+//        try (SqlSession session = sqlSessionFactory.openSession()) {
+//            WordMapper mapper = session.getMapper(WordMapper.class);
+//            Word word = mapper.getWordByName("wrong");
+//
+//            System.out.println(word.getWord() + " (" + word.getPartOfSpeech() + ")");
+//            for (Sense s : word.getSenses()) {
+//                System.out.println(" - " + s.getMeaning());
+//                for (String ex : s.getExamples()) {
+//                    System.out.println("   * " + ex);
+//                }
+//            }
+//        }
+//    }
 }

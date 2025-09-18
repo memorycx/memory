@@ -1,91 +1,69 @@
 
-import pymysql
-from pymysql import OperationalError
 import logging
+import re
+
+import re
 
 
-def get_db_connection():
-    """建立数据库连接
-    返回: 数据库连接对象和游标对象
-    """
-    try:
-        connection = pymysql.connect(
-            host='localhost',  # 替换为您的MySQL主机
-            user='root',  # 替换为您的用户名
-            password='cx050416',  # 替换为您的密码
-            database='memory',  # 目标数据库
-            charset='utf8mb4',
-        )
-        return connection, connection.cursor()
-    except OperationalError as e:
-        logging.error(f"数据库连接失败: {e}")
-        raise
+def parse_word(word):
+    # 正则表达式模式：匹配圆括号前的内容、圆括号及其中内容，以及之后的内容
+    pattern = r'^(.*?)\s*\((.*?)\)\s*(.*)$'
+
+    # 应用正则表达式
+    match = re.search(pattern, word)
+
+    if match:
+        # 提取各个部分并去除多余空白
+        before_parentheses = match.group(1).strip()
+        parentheses_content = match.group(2).strip()
+        after_parentheses = match.group(3).strip()
+
+        return {
+            'original_phrase': word,
+            'before_parentheses': before_parentheses,  # 圆括号之前的短句
+            'parentheses_content': parentheses_content,  # 圆括号内的内容
+            'after_parentheses': after_parentheses  # 圆括号之后的内容
+        }
+    else:
+        # 如果没有匹配到圆括号，只返回原始短语和圆括号前的内容（即整个短语）
+        return {
+            'original_phrase': word,
+            'before_parentheses': word.strip(),
+            'parentheses_content': None,
+            'after_parentheses': None
+        }
 
 
-def insert_word(a):
-    """插入CET4词汇数据到数据库
-    参数: word_dict - 格式为{'world': 'xxx', 'mean': 'xxx'}的字典
-    """
+# 测试示例
+if __name__ == "__main__":
+    test_cases = [
+        # "blow sb up (infml 口) reprimand sb severely 训斥某人: She got blown up by her boss for being late. 她因迟到而受到老板严厉训斥.",
+        # "example (abbr. 缩写) some explanation 一些解释",
+        # "no parentheses here 没有括号的情况"
+        "boric acid (also boracic acid / bE9rsIk 5sId; bE9rAsIk `AsId/)"
+    ]
 
-    connection, cursor = get_db_connection()
-    try:
-        for word_dict in a:
+    for case in test_cases:
+        result = parse_word(case)
+        print("原始短语:", result['original_phrase'])
+        print("圆括号之前的短句:", result['before_parentheses'])
+        print("圆括号内容:", result['parentheses_content'])
+        print("圆括号之后内容:", result['after_parentheses'])
+        print("---")
 
-            # 插入SQL语句 (使用参数化查询防止注入)
-            sql = "INSERT INTO ct6 (word, mean) VALUES (%s, %s)"
-            # 提取字典数据
-            data = (word_dict['word'], word_dict['definition'])
-            # 执行插入
-            cursor.execute(sql, data)
-            connection.commit()
-            logging.info(f"成功插入数据: {word_dict['word']}")
-            # return cursor.lastrowid
-
-    except OperationalError as e:
-        if connection: connection.rollback()
-        logging.error(f"数据库操作失败: {e}")
-        raise
-    finally:
-        if connection: connection.close()
-
-
-def save_word_to_db(all_word_data):
-    # 插入一页的单词
-    conn, cursor = get_db_connection()
-    try:
-        for word_data in all_word_data:
-            # 1. 插入单词
-            sql_word = """
-            INSERT INTO Oxford_english_dictionary (word, part_of_speech)
-            VALUES (%s, %s)
-            """
-            cursor.execute(sql_word, (word_data["word"], word_data["part_of_speech"]))
-            word_id = cursor.lastrowid
-
-            # 2. 插入义项
-            for sense in word_data.get("senses", []):
-                sql_sense = """
-                INSERT INTO Oxford_meaning (word_id, definition_en, definition_cn)
-                VALUES (%s, %s, %s)
-                """
-                cursor.execute(sql_sense, (word_id, sense.get("definition_en", ""), sense.get("definition_cn", "")))
-                sense_id = cursor.lastrowid
-
-                # 3. 插入例句
-                for ex in sense.get("examples", []):
-                    sql_example = """
-                    INSERT INTO Oxford_example (sense_id, example)
-                    VALUES (%s, %s)
-                    """
-                    cursor.execute(sql_example, (sense_id, ex))
-
-        conn.commit()
-        print(f"插入成功: ")
-
-    except Exception as e:
-        conn.rollback()
-        print(f" 出错: {e}")
-
-    finally:
-        cursor.close()
-        conn.close()
+# 测试示例
+# if __name__ == "__main__":
+#     test_cases = [
+#         "blow sb up (infml 口) reprimand sb severely 训斥某人: She got blown up by her boss for being late. 她因迟到而受到老板严厉训斥.",
+#         "example (abbr. 缩写) some explanation 一些解释",
+#         "no parentheses here 没有括号的情况"
+#     ]
+#     # 先配置日志（首次使用前配置一次）
+#     logging.basicConfig(level=logging.INFO, format='%(message)s')
+#
+#     for case in test_cases:
+#         result = parse_word(case)
+#         logging.info(f"原始短语: {result['original_phrase']}")
+#         logging.info(f"圆括号内容: {result['parentheses_content'] or '无'}")  # 处理 None
+#         logging.info(f"圆括号之后内容: {result['after_parentheses'] or '无'}")
+#         logging.info("---")

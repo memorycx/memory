@@ -32,34 +32,34 @@ public class TextController {
         return Result.success(articleList);
     }
 
-    /**
-     * 单词查询
+    /*
+      单词查询
      */
-    @GetMapping("/api/word/queryWord")
-    public Result queryWord(@RequestParam String word){
-        Word word1 = wordService.queryWord(word);
-        if(word1 == null) return Result.error("没查到该单词");
-        return Result.success(word1);
-    }
+//    @GetMapping("/api/word/queryWord")
+//    public Result queryWord(@RequestParam String word){
+//        List<Word> word1 = wordService.queryWord(word);
+//        if(word1 == null || word1.isEmpty()) return Result.error("没查到该单词");
+//        return Result.success(word1);
+//    }
     /**
      * 新增陌生单词
      */
     @GetMapping("/api/word/addUnknownWord")
-    public Result addUnknownWord(HttpServletRequest request, @RequestParam Integer wordId,@RequestParam Integer textId) {
+    public Result addUnknownWord(HttpServletRequest request, @RequestParam String word,@RequestParam Integer textId) {
         String username = request.getAttribute("username").toString();
-        int res = textService.addUnknownWord(username,wordId,textId);
+        int res = textService.addUnknownWord(username,word,textId);
         if(res == 0) return Result.error("该单词已存在");
-        return Result.success();
+        return Result.success("添加成功");
     }
     /*
     删除陌生的单词
      */
     @GetMapping("/api/word/deleteUnknownWord")
-    public Result deleteUnknownWord(HttpServletRequest request, @RequestParam Integer wordId,@RequestParam Integer textId) {
+    public Result deleteUnknownWord(HttpServletRequest request, @RequestParam String word,@RequestParam Integer textId) {
         String username = request.getAttribute("username").toString();
-        int res = textService.deleteUnknownWord(username,wordId,textId);
+        int res = textService.deleteUnknownWord(username,word,textId);
         if(res == 0) return Result.error("删除失败");
-        return Result.success();
+        return Result.success("删除成功");
     }
     /*
     获得陌生单词
@@ -81,6 +81,13 @@ public class TextController {
         String username = request.getAttribute("username").toString();
         textService.finishRead(username,id);
         return Result.success();
+    }
+
+    @GetMapping("/api/article/getFinishReading")
+    public Result getFinishReading(HttpServletRequest request) {
+        String username = request.getAttribute("username").toString();
+        List<Integer> finishReading = textService.getFinishReading(username);
+        return Result.success(finishReading);
     }
 
 }
