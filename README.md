@@ -1,12 +1,51 @@
 # memory
 
 #### 介绍
-{**以下是 Gitee 平台说明，您可以替换此简介**
-Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用 Gitee 实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
 
-#### 软件架构
-软件架构说明
+**主页内容（数据展示）**
+![输入图片说明](read/static/home_big.png)
+
+**背单词界面**
+![输入图片说明](read/static/word_big.png)
+
+
+**文章阅读**
+![输入图片说明](read/static/text_big_1.png)
+![输入图片说明](read/static/text_big_2.png)
+
+**小屏幕适配**
+![输入图片说明](read/static/small.png)
+
+
+以上是该产品的页面的展示
+
+本产品目的在于提高大家的英语水平，主要有两大功能
+1. 艾宾浩斯记忆曲线记忆单词
+2. 纯英文阅读
+    1. 陌生单词可以直接点击查询，以纯英语的解释返回
+    2. 每篇文章下，都能展示该篇添加的陌生词汇
+
+3. 主页（数据展现）
+    本界面对用户学习进行一个量化分析，以助于提高用户学习反馈
+
+
+
+#### 待开发功能
+
+1. 上传文章功能，支持txt，pdf，word等多种文件
+2. 口语训练，接入AI
+3. 连通微信小程序，可以推送最近的陌生词汇，以及今日背诵的单词
+4. 本地化知识库的扩建
+
+
+
+
+#### 杂记
+
+1. 折腾完6.S081后，将其部署在云端，方便使用
+
+
+
 
 
 #### 安装教程
@@ -21,19 +60,9 @@ Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN�
 2.  xxxx
 3.  xxxx
 
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
 
 
-#### 特技
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+
+
+
