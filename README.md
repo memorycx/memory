@@ -1,8 +1,15 @@
 # memory
 
 #### 介绍
+
+**主页内容（数据展示）**
 ![输入图片说明](read/static/home_big.png)
+
+**背单词界面**
 ![输入图片说明](read/static/word_big.png)
+
+
+**文章阅读**
 ![输入图片说明](read/static/text_big_1.png)
 ![输入图片说明](read/static/text_big_2.png)
 
