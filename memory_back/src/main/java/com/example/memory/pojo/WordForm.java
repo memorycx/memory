@@ -1,16 +1,16 @@
 package com.example.memory.pojo;
-
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+// 映射用户添加单词的表单
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Book {
+public class WordForm {
+    private String content;
     private String bookName;
-    private int id;
-    private int vocabularyNum;
-    private int state; // 0 代表是共有书籍，1 代表是用户自己创建的书籍
+    boolean newBook;
+
 }

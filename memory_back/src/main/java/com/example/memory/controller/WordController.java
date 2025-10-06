@@ -6,6 +6,7 @@ import com.example.memory.Service.WordService;
 import com.example.memory.pojo.Book;
 import com.example.memory.pojo.Result;
 import com.example.memory.pojo.Word;
+import com.example.memory.pojo.WordForm;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +35,9 @@ public class WordController {
      * 获取用户所有的词汇书
      */
     @GetMapping("/api/word/getBookList")
-    public Result getBookList() {
-        return Result.success(wordService.getBookList());
+    public Result getBookList(HttpServletRequest request) {
+        String username = (String) request.getAttribute("username");
+        return Result.success(wordService.getBookList(username));
     }
 
     /**
@@ -83,6 +85,19 @@ public class WordController {
         wordService.setKnow(wordId,state,username);
         return Result.success();
     }
+
+    @PostMapping("/api/word/addWord")
+    public Result addWord(HttpServletRequest request,@RequestBody WordForm form) {
+        String username = (String) request.getAttribute("username");
+        int res = wordService.addWord(username,form);
+        if(res == 0){
+            return Result.error("添加失败");
+        }
+        return Result.success("添加成功");
+    }
+
+
+
 
 
 

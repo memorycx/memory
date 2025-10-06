@@ -2,6 +2,7 @@ package com.example.memory.Service;
 
 import com.example.memory.mapper.UserMapper;
 
+import com.example.memory.mapper.WordMapper;
 import com.example.memory.pojo.User;
 import com.example.memory.pojo.UserLearn;
 import com.example.memory.pojo.Word;
@@ -21,6 +22,9 @@ public class UserService {
 
     @Autowired
     WordService wordService;
+
+    @Autowired
+    WordMapper wordMapper;
 
     /**
      * 用户登录核验
@@ -110,21 +114,41 @@ public class UserService {
     }
 
     public void updateWordStatus(Word word,String username) {
-        //走两个逻辑
-        // 1.拿到单词的sate,然后更新用户今日学习表中的数据
-        // 2.更新单词的学习状态
+        // 首先判断是什么书籍
 
-        // 补充：判断单词是否掌握，如果掌握，要维护用户表
-        if(word.getState() == 0){
-            userMapper.addWordStatus(word,username);
-            userMapper.updateNewLearnToday(username);
-        }else if(word.getState() < 4){
-            userMapper.updateWordStatus(word,username);
-            userMapper.updateReviewToday(username);
+        int bookId = wordMapper.getCurrentBookId(username);
+        int state = wordMapper.getBookState(bookId);
+
+        if(state == 0){
+            //走两个逻辑
+            // 1.拿到单词的sate,然后更新用户今日学习表中的数据
+            // 2.更新单词的学习状态
+
+            // 补充：判断单词是否掌握，如果掌握，要维护用户表
+            if(word.getState() == 0){
+                userMapper.addWordStatus(word,username);
+                userMapper.updateNewLearnToday(username);
+            }else if(word.getState() < 4){
+                userMapper.updateWordStatus(word,username);
+                userMapper.updateReviewToday(username);
+            }else if(word.getState() == 4){
+                userMapper.updateReviewToday(username);
+                userMapper.updateWordNums(username);
+            }
+
         }else{
-            userMapper.updateReviewToday(username);
-            userMapper.updateWordNums(username);
+            userMapper.updateWordStatusBySelf(word.getWord(),username);
+            if(word.getState() == 0){
+                userMapper.updateNewLearnToday(username);
+            }else if(word.getState() < 4){
+                userMapper.updateReviewToday(username);
+            }else if(word.getState() == 4){
+                userMapper.updateReviewToday(username);
+                userMapper.updateWordNums(username);
+            }
+
         }
+
 
 
     }

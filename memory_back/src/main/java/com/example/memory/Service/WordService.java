@@ -5,6 +5,8 @@ import com.example.memory.mapper.WordMapper;
 import com.example.memory.pojo.Book;
 import com.example.memory.pojo.User;
 import com.example.memory.pojo.Word;
+import com.example.memory.pojo.WordForm;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+@Slf4j
 @Service
 public class WordService {
 
@@ -20,6 +23,45 @@ public class WordService {
 
     @Autowired
     UserMapper userMapper;
+
+    private final LocalDate date = LocalDate.now();
+    private List<Word> getReviewWord(List<Word>  reviewWordList){
+        if(reviewWordList == null) return Collections.emptyList();
+        List<Word> wordList = new ArrayList<>();
+        for(Word word : reviewWordList){
+            if(word.getState() == 1 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 1){
+                wordList.add(word);
+            }else if(word.getState() == 2 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 2){
+                wordList.add(word);
+            }else if(word.getState() == 3 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 3){
+                wordList.add(word);
+            }else if(word.getState() == 4 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 4){
+                wordList.add(word);
+            }else if(word.getState() == 5 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 27){
+                wordList.add(word);
+            }
+        }
+        return wordList;
+    }
+    private List<Word> getLearnWord( List<Word> learnWordList,int end){
+        if(learnWordList == null) return Collections.emptyList();
+        List<Word> wordList = new ArrayList<>();
+        if (learnWordList.size() <= end) {
+            wordList.addAll(learnWordList);
+        } else {
+            Random random = new Random();
+            for (int i = 0; i < end; i++) {
+                // 生成不重复的随机索引
+                int randomIndex = random.nextInt(learnWordList.size() - i);
+                wordList.add(learnWordList.get(randomIndex));
+                // 交换已选中元素到尾部，避免重复选取
+                Collections.swap(learnWordList, randomIndex, learnWordList.size() - 1 - i);
+            }
+        }
+        return wordList;
+    }
+
+
 
     /**
      * 获取书籍的单词数量
@@ -35,13 +77,14 @@ public class WordService {
         return wordMapper.getCurrentBookName(bookId);
     }
 
-    public List<Book> getBookList() {
-        return wordMapper.getBookList();
+    public List<Book> getBookList(String username) {
+        return wordMapper.getBookList(username);
     }
 
     public List<Word> getWordList(String username) {
-        LocalDate date = LocalDate.now();
         int bookId = wordMapper.getCurrentBookId(username);
+        int state = wordMapper.getBookState(bookId);
+
 
         // num 为今日已经背了的单词数
         Integer num = wordMapper.getNums(username);
@@ -50,40 +93,23 @@ public class WordService {
         Integer target = wordMapper.getTargetNums(username);
         int end = target - num;
 
-        // 这里需要走两步逻辑 1.拿到复习单词 2.拿到复习单词
-        List<Word> wordList = new ArrayList<>();
 
-        // 1. 拿到复习单词
-        List<Word> reviewWordList = wordMapper.getReviewWord(username);
-        for(Word word : reviewWordList){
-            if(word.getState() == 1 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 1){
-                wordList.add(word);
-            }else if(word.getState() == 2 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 2){
-                wordList.add(word);
-            }else if(word.getState() == 3 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 3){
-                wordList.add(word);
-            }else if(word.getState() == 4 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 4){
-                wordList.add(word);
-            }else if(word.getState() == 5 && Math.abs(ChronoUnit.DAYS.between(date, word.getUpdateTime())) >= 27){
-                wordList.add(word);
-            }
+        List<Word> wordList = new ArrayList<>();
+        // 这里需要走两步逻辑 1.拿到复习单词 2.拿到复习单词
+
+        if(state == 0){
+            //这里是官方书籍的词汇
+
+            wordList.addAll(getReviewWord( wordMapper.getReviewWord(username)));
+            wordList.addAll(getLearnWord(wordMapper.getLearnWord(username,bookId),end));
+
+        }else{
+            // 这里是用户自己创建的书籍
+            String bookName = wordMapper.getCurrentBookName(bookId);
+            wordList.addAll(getReviewWord( wordMapper.getReviewWordByUserBook(username,bookName)));
+            wordList.addAll(getLearnWord(wordMapper.getLearnWordByUserBook(username,bookName),end));
         }
-        // 2. 拿到背诵单词
-        List<Word> learnWordList = wordMapper.getLearnWord(username,bookId);
-        if (learnWordList != null && !learnWordList.isEmpty()) {
-            if (learnWordList.size() <= end) {
-                wordList.addAll(learnWordList);
-            } else {
-                Random random = new Random();
-                for (int i = 0; i < end; i++) {
-                    // 生成不重复的随机索引
-                    int randomIndex = random.nextInt(learnWordList.size() - i);
-                    wordList.add(learnWordList.get(randomIndex));
-                    // 交换已选中元素到尾部，避免重复选取
-                    Collections.swap(learnWordList, randomIndex, learnWordList.size() - 1 - i);
-                }
-            }
-        }
+
         return wordList;
     }
 
@@ -139,4 +165,27 @@ public class WordService {
     }
 
 
+    public int addWord(String username, WordForm form) {
+        // 1. 解析form中的content的内容
+        // 2. 存储,判断是否为新的书籍，如果是新的，就要先创建这本书
+        if(form.isNewBook()) {
+            wordMapper.createBook(form.getBookName(), username);
+        }
+
+        String[] lines = form.getContent().split("\n");
+        List<Word> wordList = new ArrayList<>();
+        for(String s : lines) {
+            String[] tem = s.split(" ");
+            if(tem.length != 3) continue;
+            Word word = new Word();
+            word.setWord(tem[1]);
+            word.setMeaning(tem[2]);
+            wordList.add(word);
+
+        }
+
+        wordMapper.addWord(wordList,username,form.getBookName());
+        wordMapper.updateNum(form.getBookName(),wordList.size(),username);
+        return wordList.size();
+    }
 }

@@ -40,13 +40,14 @@ export function getWordList() {
   })
 }
 
-export function updateWordStatus(state,wordId) {
+export function updateWordStatus(state,wordId,word) {
   return request({
     url: '/api/user/updateWordStatus',
     method: 'POST',
     data: {
       state,
-      wordId
+      wordId,
+      word
     }
   }).catch(error => {
     throw error;
@@ -83,6 +84,18 @@ export function setKnow(params) {
   })
 }
 
+
+// -------------
+// 该接口将数据发给后端，由后端来解析，并且保存
+export function addword(data) {
+  return request({
+    url: '/api/word/addWord',
+    method: 'POST',
+    data
+  }).catch(error => {
+    throw error;
+  })
+}
 
 
 

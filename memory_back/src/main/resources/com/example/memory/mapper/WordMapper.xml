@@ -18,7 +18,7 @@
             and word_id not in (
                 select word_id
                 from user_word_state
-                where username = #{username}
+                where username = #{username} and state = 0
             );
 
     </select>
@@ -38,6 +38,14 @@
         order by uws.update_time;  -- 按更新时间排序
 
     </select>
+
+    <insert id="addWord">
+        insert into user_book (username,word,meaning,bookName,update_time)
+        values
+        <foreach collection="wordList" item="word" separator=",">
+            (#{username},#{word.word},#{word.meaning},#{bookName},now())
+        </foreach>
+    </insert>
 
 
 

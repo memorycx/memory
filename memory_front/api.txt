@@ -143,6 +143,7 @@
 
 - 用户将单词设置为已掌握 /api/word/setKnow GET  {token,wordId}  
 
+- 用户自定义词汇本 /api/word/addWord POST  {token，form} 
 
 
 # 文章的接口

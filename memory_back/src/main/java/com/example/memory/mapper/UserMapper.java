@@ -81,5 +81,6 @@ public interface UserMapper {
     void updateUser(User user, String username);
 
 
-
+    @Update("update user_book set state =  state + 1 where username = #{username} and word = #{word}")
+    void updateWordStatusBySelf(String word, String username);
 }

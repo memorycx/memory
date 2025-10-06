@@ -3,17 +3,16 @@
     <el-card class="vocabulary-card">
       <template #header>
         <div class="card-header">
-          <span>背单词</span>
+          <el-button @click= "() => this.dialogVisible = true"> {{ currentBook }} 自定义词汇本</el-button>
 
-
-        <el-dropdown placement="bottom-end">
-          <el-button> {{ selectedBook }} <i class="el-icon-arrow-down"></i></el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item v-for="item in bookList" :key="item.id" :label="item.bookName" :value="item.bookName" @click="changeBookID(item.id,item.bookName)">{{ item.bookName }}</el-dropdown-item>      
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+          <el-dropdown placement="bottom-end">
+            <el-button> {{ selectedBook }} <i class="el-icon-arrow-down"></i></el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="item in bookList" :key="item.id" :label="item.bookName" :value="item.bookName" @click="changeBookID(item.id,item.bookName)">{{ item.bookName }}</el-dropdown-item>      
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
 
 
         </div>
@@ -119,12 +118,53 @@
         </div>
 
       </div>
-    </el-card>
+      </el-card>
+      <el-dialog
+        v-model="dialogVisible"
+        class="custom-transition-dialog"
+        :title="添加词汇"
+        width="30%"
+        :transition="transitionConfig"
+        align-center = true
+      >
+        
+        <el-form :model="form" label-width="auto" style="max-width: 600px">
+          <el-form-item label="新建词汇本">
+            <el-switch v-model="form.newBook" />
+          </el-form-item>
+          <el-form-item v-if="form.newBook" label="词汇本名称">
+            <el-input v-model="form.bookName" placeholder="请输入词汇本名称" />
+          </el-form-item>
+          <el-form-item v-else label="词汇本">
+            <el-select v-model="form.bookName" placeholder="请选择词汇本">
+              <el-option label="Zone one" value="shanghai" />
+              <el-option label="Zone two" value="beijing" />
+            </el-select>
+          </el-form-item>
+          <el-form-item prop="desc" 
+          label="添加词汇"
+          >
+          <el-input 
+              placeholder="规则说明：文本支持markdown中的列表无序列表格式，并且中英文之间要有空格分隔。"
+              v-model="form.content" 
+              type="textarea" 
+              :autosize="{ minRows: 8}"/>
+
+          </el-form-item>
+        </el-form>
+        <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitWord">
+          提交
+        </el-button>
+      </template>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
-import {setKnow ,getContinueLearn,getNumTodayAlready, changeBook , getWordList ,getBookList ,getCurrentBook ,updateWordStatus} from '../api/word'
+import {addword,setKnow ,getContinueLearn,getNumTodayAlready, changeBook , getWordList ,getBookList ,getCurrentBook ,updateWordStatus} from '../api/word'
 export default {
   name: 'VocabularyView',
   data() {
@@ -165,7 +205,16 @@ export default {
       learnedToday: 0, //今日已学习单词数
       reviewToday:0, //今日复习单词数
       isLearningCompleted: false, // 学习是否完成的状态标志
-      totalMax: 0 // 最大下标
+      totalMax: 0, // 最大下标
+
+      dialogVisible: false, 
+      form:{
+        content:'',
+        bookName:'',
+        newBook :false,
+      },
+
+      createNewBook:false,
     }
   },
   computed: {
@@ -177,6 +226,19 @@ export default {
     },
   },
   methods: {
+    async submitWord(){
+      this.dialogVisible = false;
+      if(this.form.content.trim() === '' || this.form.bookName.trim() === '') return;
+
+      addword(this.form).then(async ()=> {
+        const book = await getBookList();
+        if(book != null) this.bookList = book;
+      })
+
+      this.form.content = ''
+      this.form.bookName = ''
+      this.form.newBook = false
+    },
     async pass(id,state) {
       if(this.totalMax == this.currentIndex){
         await setKnow({wordId:id,state:state});
@@ -248,7 +310,7 @@ export default {
       if (this.userInput.toLowerCase().trim() === this.currentWord.word.toLowerCase()) {
         this.isCorrect = true
         if(this.totalMax == this.currentIndex){
-          await updateWordStatus(state,id);
+          await updateWordStatus(state,id,this.currentWord.word);
           this.totalMax++;
         }
         const learned = await getNumTodayAlready();
@@ -551,6 +613,10 @@ export default {
   font-size: 14px;
   color: #666;
 }
+
+
+
+
 
 @media (max-width: 1000px) {
   .learning-stats{
